@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Home as HomeIcon } from "lucide-react";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./components/Home";
 import Auth from "./pages/Auth";
@@ -42,13 +43,13 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           {/* Global Floating Home Button */}
-          <div className="fixed bottom-6 right-6 z-50">
+          <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50">
             <Link to="/">
               <div 
-                className="bg-background/80 backdrop-blur-md border-2 border-primary/50 p-1 rounded-full shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_25px_rgba(0,255,255,0.6)] hover:scale-110 transition-all cursor-pointer flex items-center justify-center group"
-                title="Go to Home"
+                className="bg-background/40 backdrop-blur-xl border border-primary/30 p-4 rounded-full shadow-[0_0_15px_rgba(0,255,255,0.15)] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:bg-primary/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-center justify-center group"
+                title="Return Home"
               >
-                <img src="/gta-logo.jpg" alt="GTA Home" className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover opacity-90 group-hover:opacity-100" />
+                <HomeIcon className="w-6 h-6 md:w-7 md:h-7 text-primary/80 group-hover:text-primary transition-colors" strokeWidth={1.5} />
               </div>
             </Link>
           </div>

@@ -51,6 +51,21 @@
     --shadow-glow: 0 4px 20px hsl(221 83% 53% / 0.15);
     --shadow-crystal: 0 2px 10px hsl(0 0% 0% / 0.08);
     --shadow-plasma: 0 4px 20px hsl(221 83% 53% / 0.2);
+
+    /* Soft Aurora — light mode's answer to dark mode's gradients, same DNA, pastel and restrained */
+    --gradient-void: radial-gradient(ellipse at center, hsl(220 45% 99%), hsl(220 35% 95%));
+    --gradient-plasma: linear-gradient(135deg, hsl(221 83% 53%), hsl(192 85% 40%));
+    --gradient-aurora: linear-gradient(90deg,
+      hsl(221 83% 60% / 0.05),
+      hsl(192 85% 50% / 0.05),
+      hsl(260 70% 65% / 0.05),
+      hsl(221 83% 60% / 0.05));
+    --gradient-crystal: linear-gradient(180deg, hsl(0 0% 100% / 0.9), hsl(220 30% 98% / 0.7));
+
+    --orb-1: radial-gradient(circle, hsl(221 83% 60% / 0.16), transparent 70%);
+    --orb-2: radial-gradient(circle, hsl(192 85% 45% / 0.14), transparent 70%);
+    --orb-3: radial-gradient(circle, hsl(260 70% 65% / 0.12), transparent 70%);
+    --orb-4: radial-gradient(circle, hsl(221 70% 55% / 0.1), transparent 70%);
   }
 
   .dark {
@@ -119,6 +134,11 @@
     --shadow-plasma: 0 0 40px hsl(217 90% 61% / 0.5), 0 0 80px hsl(190 90% 50% / 0.3);
 
     --glass-refraction: hsl(217 60% 80% / 0.05);
+
+    --orb-1: radial-gradient(circle, hsl(217 70% 40% / 0.6), transparent 70%);
+    --orb-2: radial-gradient(circle, hsl(190 60% 35% / 0.5), transparent 70%);
+    --orb-3: radial-gradient(circle, hsl(200 70% 45% / 0.4), transparent 70%);
+    --orb-4: radial-gradient(circle, hsl(230 65% 50% / 0.35), transparent 70%);
   }
 }
 
@@ -130,10 +150,6 @@
   body {
     @apply bg-background text-foreground font-sans;
     min-height: 100vh;
-  }
-
-  /* Dark mode specific body styling */
-  .dark body {
     background: var(--gradient-void);
   }
 }
@@ -146,12 +162,8 @@
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-
-  .dark .nebula-atmosphere {
     opacity: 1;
+    transition: opacity 0.5s ease;
   }
 
   .nebula-orb {
@@ -165,7 +177,7 @@
   .nebula-orb-1 {
     width: 40vw;
     height: 40vw;
-    background: radial-gradient(circle, hsl(217 70% 40% / 0.6), transparent 70%);
+    background: var(--orb-1);
     top: -10%;
     left: -10%;
     animation-duration: 25s;
@@ -174,7 +186,7 @@
   .nebula-orb-2 {
     width: 35vw;
     height: 35vw;
-    background: radial-gradient(circle, hsl(190 60% 35% / 0.5), transparent 70%);
+    background: var(--orb-2);
     bottom: -15%;
     right: -5%;
     animation-duration: 30s;
@@ -184,7 +196,7 @@
   .nebula-orb-3 {
     width: 30vw;
     height: 30vw;
-    background: radial-gradient(circle, hsl(200 70% 45% / 0.4), transparent 70%);
+    background: var(--orb-3);
     top: 50%;
     left: 30%;
     animation-duration: 22s;
@@ -194,7 +206,7 @@
   .nebula-orb-4 {
     width: 25vw;
     height: 25vw;
-    background: radial-gradient(circle, hsl(230 65% 50% / 0.35), transparent 70%);
+    background: var(--orb-4);
     top: 20%;
     right: 20%;
     animation-duration: 28s;
@@ -203,12 +215,33 @@
 
   /* Crystalline Cards - Different styles for light/dark */
   .crystal-card {
-    @apply bg-card border border-border rounded-lg;
+    @apply border border-border rounded-lg;
+    background: var(--gradient-crystal);
+    backdrop-filter: blur(12px) saturate(150%);
+    box-shadow: var(--shadow-crystal);
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .crystal-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-aurora);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    animation: auroraShift 8s ease-in-out infinite;
+    pointer-events: none;
   }
 
   .crystal-card:hover {
-    @apply shadow-lg;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px hsl(221 83% 53% / 0.12), var(--shadow-crystal);
+  }
+
+  .crystal-card:hover::before {
+    opacity: 1;
   }
 
   /* Dark mode crystal card with holographic effect */
@@ -260,7 +293,8 @@
 
   /* Plasma Button - Different styles for light/dark */
   .plasma-button {
-    @apply bg-primary text-primary-foreground;
+    @apply text-primary-foreground;
+    background: var(--gradient-plasma);
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -313,6 +347,7 @@
   /* Glass Header - Different styles for light/dark */
   .glass-header {
     @apply bg-background/80 backdrop-blur-md border-b border-border;
+    box-shadow: 0 1px 20px hsl(221 83% 53% / 0.06);
   }
 
   .dark .glass-header {
@@ -338,9 +373,10 @@
     animation: bloomPulse 4s ease-in-out infinite;
   }
 
-  /* Electric Pulse (Dark mode only) */
+  /* Electric Pulse - gentle breathing in light, full neon pulse in dark */
   .electric-pulse {
     @apply text-primary;
+    animation: softPulse 3s ease-in-out infinite;
   }
 
   .dark .electric-pulse {
@@ -373,44 +409,24 @@
     background: var(--gradient-nebula);
   }
 
-  /* Motion animations (Dark mode only for floating effects) */
+  /* Motion animations - gentle floating in both themes */
   .animate-float-slow {
-    animation: none;
-  }
-
-  .dark .animate-float-slow {
     animation: floatSlow 6s ease-in-out infinite;
   }
 
   .animate-float-delayed {
-    animation: none;
-  }
-
-  .dark .animate-float-delayed {
     animation: floatSlow 8s ease-in-out infinite 2s;
   }
 
   .animate-float-reverse {
-    animation: none;
-  }
-
-  .dark .animate-float-reverse {
     animation: floatReverse 7s ease-in-out infinite 1s;
   }
 
   .animate-blob {
-    animation: none;
-  }
-
-  .dark .animate-blob {
     animation: blob 7s ease-in-out infinite;
   }
 
   .animate-blob-delayed {
-    animation: none;
-  }
-
-  .dark .animate-blob-delayed {
     animation: blob 9s ease-in-out infinite 3s;
   }
 
@@ -476,6 +492,16 @@
     50% {
       opacity: 0.5;
       transform: scale(1.05);
+    }
+  }
+
+  /* Soft pulse (light mode) */
+  @keyframes softPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.65;
     }
   }
 

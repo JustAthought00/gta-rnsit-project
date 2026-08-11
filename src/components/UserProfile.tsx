@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Mail, MapPin, Calendar, Briefcase, GraduationCap, Settings, Github, Linkedin, Globe } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Mail, MapPin, Calendar, Briefcase, GraduationCap, Settings, Github, Linkedin, Globe, Code, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,11 +45,20 @@ interface Activity {
   venue: string | null;
 }
 
+interface Project {
+  id: string;
+  title: string;
+  description: string | null;
+  github_link: string | null;
+  team_members: string | null;
+}
+
 const UserProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -89,13 +98,15 @@ const UserProfile = () => {
 
     setProfile(profileData as Profile);
 
-    const [{ data: skillsData }, { data: activitiesData }] = await Promise.all([
+    const [{ data: skillsData }, { data: activitiesData }, { data: projectsData }] = await Promise.all([
       supabase.from('skills').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       supabase.from('activities').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabase.from('projects').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
     ]);
 
     setSkills(skillsData || []);
     setActivities(activitiesData || []);
+    setProjects(projectsData || []);
     setLoading(false);
   };
 
@@ -250,6 +261,7 @@ const UserProfile = () => {
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <Badge variant="outline" className="border-primary/30 text-primary">{skills.length} Skills</Badge>
                   <Badge variant="outline" className="border-accent/30 text-accent">{activities.length} Activities</Badge>
+                  <Badge variant="outline" className="border-green-500/30 text-green-400">{projects.length} Projects</Badge>
                 </div>
               </div>
             </div>
@@ -283,6 +295,39 @@ const UserProfile = () => {
           </div>
         )}
 
+        {projects.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <Code className="h-5 w-5 text-accent" />Projects
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((project) => (
+                <Card key={project.id} className="crystal-card hover:border-accent/30 transition-all">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-foreground">{project.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{project.description || 'No description'}</p>
+                    <div className="flex flex-col gap-2 mt-4 text-sm text-muted-foreground">
+                      {project.team_members && (
+                        <div className="flex items-start gap-2">
+                          <Users className="h-4 w-4 mt-0.5 text-primary" />
+                          <span className="line-clamp-2">{project.team_members}</span>
+                        </div>
+                      )}
+                      {project.github_link && (
+                        <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors mt-2">
+                          <Github className="h-4 w-4" /> View on GitHub
+                        </a>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {activities.length > 0 && (
           <div>
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -307,7 +352,7 @@ const UserProfile = () => {
           </div>
         )}
 
-        {skills.length === 0 && activities.length === 0 && (
+        {skills.length === 0 && activities.length === 0 && projects.length === 0 && (
           <Card className="crystal-card">
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">This user hasn't added any skills or activities yet.</p>

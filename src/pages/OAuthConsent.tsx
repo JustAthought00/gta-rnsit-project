@@ -51,7 +51,7 @@ export default function OAuthConsent() {
         <CardHeader className="space-y-1">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="h-6 w-6 text-primary" />
-            <CardTitle className="text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <CardTitle className="text-2xl text-foreground">
               Authorize app
             </CardTitle>
           </div>

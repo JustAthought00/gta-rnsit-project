@@ -111,8 +111,8 @@ const CampusPulse = () => {
           {statTiles.map(({ label, value, icon: Icon }) => (
             <Card key={label} className="crystal-card">
               <CardContent className="py-5 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center shadow-glow shrink-0">
-                  <Icon className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-glow shrink-0">
+                  <Icon className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground leading-none">{value}</p>

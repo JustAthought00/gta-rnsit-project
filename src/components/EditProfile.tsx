@@ -212,7 +212,7 @@ const EditProfile = () => {
                   <div className="relative">
                     <Avatar className="h-24 w-24">
                       <AvatarImage src={avatarUrl || undefined} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-2xl">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                         {getInitials(fullName || 'U')}
                       </AvatarFallback>
                     </Avatar>
@@ -388,7 +388,7 @@ const EditProfile = () => {
             <Card className="crystal-card">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-foreground flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5 text-green-400" />
+                  <CalendarIcon className="h-5 w-5 text-foreground" />
                   Manage Activities
                 </CardTitle>
                 <Button onClick={() => setIsActivityModalOpen(true)} className="plasma-button text-primary-foreground">

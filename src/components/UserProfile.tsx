@@ -154,18 +154,7 @@ const UserProfile = () => {
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      'Graphics & Design': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-      'Programming & Tech': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      'Digital Marketing': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-      'Writing & Translation': 'bg-green-500/20 text-green-400 border-green-500/30',
-      'Video & Animation': 'bg-red-500/20 text-red-400 border-red-500/30',
-      'Music & Audio': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-      'Sports': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    };
-    return colors[category] || 'bg-muted text-muted-foreground border-border';
-  };
+  const getCategoryColor = () => 'bg-transparent text-foreground border-foreground/30';
 
   if (loading) {
     return (
@@ -220,7 +209,7 @@ const UserProfile = () => {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <Avatar className="h-24 w-24 md:h-32 md:w-32">
                 <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-3xl md:text-4xl">
+                <AvatarFallback className="bg-primary text-primary-foreground text-3xl md:text-4xl">
                   {getInitials(profile.full_name)}
                 </AvatarFallback>
               </Avatar>
@@ -261,7 +250,7 @@ const UserProfile = () => {
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <Badge variant="outline" className="border-primary/30 text-primary">{skills.length} Skills</Badge>
                   <Badge variant="outline" className="border-accent/30 text-accent">{activities.length} Activities</Badge>
-                  <Badge variant="outline" className="border-green-500/30 text-green-400">{projects.length} Projects</Badge>
+                  <Badge variant="outline" className="border-foreground/30 text-foreground">{projects.length} Projects</Badge>
                 </div>
               </div>
             </div>
@@ -279,7 +268,7 @@ const UserProfile = () => {
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <CardTitle className="text-lg text-foreground">{skill.title}</CardTitle>
-                      <Badge className={getCategoryColor(skill.category)}>{skill.category}</Badge>
+                      <Badge className={getCategoryColor()}>{skill.category}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>

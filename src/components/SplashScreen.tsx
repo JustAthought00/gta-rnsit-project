@@ -41,7 +41,7 @@ const SplashScreen = ({ onEnterApp }: SplashScreenProps) => {
             <div
               key={i}
               className="w-3 h-3 rounded-full transition-colors duration-200"
-              style={{ backgroundColor: dotsOn > i ? '#FF0033' : 'rgba(255,255,255,0.15)' }}
+              style={{ backgroundColor: dotsOn > i ? '#ffffff' : 'rgba(255,255,255,0.15)' }}
             />
           ))}
         </div>

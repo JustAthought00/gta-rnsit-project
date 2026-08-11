@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Nothing Dot-Matrix: monochrome black/white with a single signature red
-   accent, transparent outline-only components, dot-matrix used sparingly
-   for numbers/labels — not decoration everywhere. */
+/* Nothing OS: strictly white / black / grey — no colour accent at all.
+   Transparent outline components, dot-matrix used sparingly for numbers,
+   corner alignment marks like a technical spec sheet. Inverts cleanly
+   between light (white shell, black controls) and dark (black shell,
+   white controls), same as the real Nothing launcher. */
 
 @layer base {
   :root {
@@ -18,9 +20,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 7%;
 
-    --primary: 350 100% 48%;
+    --primary: 0 0% 8%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 350 100% 96%;
+    --primary-soft: 0 0% 94%;
 
     --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 15%;
@@ -28,30 +30,30 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 42%;
 
-    --accent: 350 100% 48%;
+    --accent: 0 0% 45%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 85% 50%;
+    --destructive: 0 0% 30%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 350 100% 48%;
+    --ring: 0 0% 8%;
 
     --radius: 1rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 7%;
-    --sidebar-primary: 350 100% 48%;
+    --sidebar-primary: 0 0% 8%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 350 100% 48%;
+    --sidebar-accent: 0 0% 45%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 350 100% 48%;
+    --sidebar-ring: 0 0% 8%;
   }
 
   .dark {
-    /* Dark Mode — Nothing's true home turf: black glass with red LEDs */
+    /* Dark Mode — controls invert to white, exactly like the Nothing launcher's dark theme */
     --background: 0 0% 4%;
     --foreground: 0 0% 97%;
 
@@ -61,9 +63,9 @@
     --popover: 0 0% 7%;
     --popover-foreground: 0 0% 97%;
 
-    --primary: 350 100% 55%;
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 350 60% 16%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 8%;
+    --primary-soft: 0 0% 16%;
 
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 90%;
@@ -71,24 +73,24 @@
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 62%;
 
-    --accent: 350 100% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 55%;
+    --accent-foreground: 0 0% 4%;
 
-    --destructive: 0 85% 58%;
-    --destructive-foreground: 0 0% 97%;
+    --destructive: 0 0% 70%;
+    --destructive-foreground: 0 0% 4%;
 
     --border: 0 0% 22%;
     --input: 0 0% 22%;
-    --ring: 350 100% 55%;
+    --ring: 0 0% 96%;
 
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 97%;
-    --sidebar-primary: 350 100% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 350 100% 55%;
-    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 96%;
+    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-accent: 0 0% 55%;
+    --sidebar-accent-foreground: 0 0% 4%;
     --sidebar-border: 0 0% 22%;
-    --sidebar-ring: 350 100% 55%;
+    --sidebar-ring: 0 0% 96%;
   }
 }
 
@@ -123,30 +125,62 @@
     display: none;
   }
 
-  /* Transparent card: outline only, no solid fill — see-through like Nothing's back panel */
+  /* Transparent card: outline only, no solid fill — see-through like Nothing's back panel.
+     Corner alignment marks (top-left / bottom-right) borrow the "exposed spec sheet" motif. */
   .crystal-card {
     @apply rounded-2xl border bg-card/70 backdrop-blur-md;
     transition: border-color 0.2s ease, transform 0.15s ease;
+    position: relative;
+  }
+
+  .crystal-card::before,
+  .crystal-card::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+  }
+
+  .crystal-card::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1.5px solid hsl(var(--foreground));
+    border-left: 1.5px solid hsl(var(--foreground));
+  }
+
+  .crystal-card::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1.5px solid hsl(var(--foreground));
+    border-right: 1.5px solid hsl(var(--foreground));
   }
 
   .crystal-card:hover {
-    border-color: hsl(var(--primary));
+    border-color: hsl(var(--foreground));
     transform: translateY(-2px);
   }
 
-  /* Button: solid red, pill-shaped like Nothing's toggle switches */
+  .crystal-card:hover::before,
+  .crystal-card:hover::after {
+    opacity: 1;
+  }
+
+  /* Button: solid inverted fill (black-on-white / white-on-black), pill-shaped like Nothing's toggles */
   .plasma-button {
     @apply bg-primary text-primary-foreground rounded-full font-semibold;
     transition: opacity 0.15s ease, transform 0.1s ease;
   }
 
   .plasma-button:hover {
-    opacity: 0.9;
+    opacity: 0.85;
     transform: translateY(-1px);
   }
 
   .plasma-button:active {
-    opacity: 0.8;
+    opacity: 0.7;
     transform: translateY(0);
   }
 
@@ -154,9 +188,9 @@
     @apply bg-background/90 backdrop-blur-md border-b;
   }
 
-  /* Logo mark: static red, small LED-like blink instead of a soft glow pulse */
+  /* Logo mark: static, small LED-like blink instead of a soft glow pulse */
   .electric-pulse {
-    @apply text-primary;
+    @apply text-foreground;
     animation: ledBlink 2.6s step-end infinite;
   }
 

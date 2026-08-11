@@ -92,9 +92,9 @@ const CampusPulse = () => {
   ];
 
   const rankStyles = [
-    'bg-yellow-500/20 text-yellow-500 border-yellow-500/40',
-    'bg-slate-400/20 text-slate-300 border-slate-400/40',
-    'bg-amber-700/20 text-amber-600 border-amber-700/40',
+    'bg-foreground text-background border-foreground',
+    'bg-muted-foreground/20 text-foreground border-muted-foreground/40',
+    'bg-transparent text-muted-foreground border-border',
   ];
 
   return (

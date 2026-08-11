@@ -419,7 +419,7 @@ const SkillDetail = () => {
 
               {myRequest && myRequest.status === 'accepted' && (
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+                  <Badge className="bg-foreground text-background border-foreground">
                     <Check className="h-3 w-3 mr-1" /> Request accepted
                   </Badge>
                   <Button variant="outline" className="border-primary/40" onClick={() => setShowMessagesModal(true)}>
@@ -482,7 +482,7 @@ const SkillDetail = () => {
                       ) : (
                         <Badge
                           variant="outline"
-                          className={req.status === 'accepted' ? 'bg-green-500/20 text-green-500 border-green-500/30' : 'text-muted-foreground border-border'}
+                          className={req.status === 'accepted' ? 'bg-foreground text-background border-foreground' : 'text-muted-foreground border-border'}
                         >
                           {req.status}
                         </Badge>

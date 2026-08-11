@@ -528,7 +528,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                 className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors"
               >
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                     {getInitials(user.full_name)}
                   </AvatarFallback>
                 </Avatar>
@@ -557,7 +557,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                     {currentUser?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -637,7 +637,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                     >
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                             {getInitials(conversation.other_user_name)}
                           </AvatarFallback>
                         </Avatar>
@@ -684,7 +684,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                     >
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                             {getInitials(conversation.other_user_name)}
                           </AvatarFallback>
                         </Avatar>
@@ -771,7 +771,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                     {selectedConversation ? (
                       <>
                         <Avatar className="h-8 md:h-10 w-8 md:w-10">
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                             {getInitials(currentConversation?.other_user_name || 'U')}
                           </AvatarFallback>
                         </Avatar>
@@ -933,7 +933,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
           ) : (
             <div className="flex-1 flex items-center justify-center bg-background">
               <div className="text-center">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                <div className="w-24 h-24 mx-auto mb-6 bg-primary rounded-full flex items-center justify-center">
                   <MessageCircle className="h-12 w-12 text-primary-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-foreground">Your Messages</h3>

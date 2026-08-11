@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Mail, MapPin, Calendar, Briefcase, GraduationCap, Settings } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Mail, MapPin, Calendar, Briefcase, GraduationCap, Settings, Github, Linkedin, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,9 @@ interface Profile {
   academic_year: string | null;
   bio?: string | null;
   avatar_url?: string | null;
+  github_url?: string | null;
+  linkedin_url?: string | null;
+  portfolio_url?: string | null;
   created_at: string;
 }
 
@@ -201,6 +204,27 @@ const UserProfile = () => {
                   )}
                   <div className="flex items-center gap-1"><Mail className="h-4 w-4" /><span className="text-sm">{profile.email}</span></div>
                 </div>
+                
+                {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
+                    {profile.github_url && (
+                      <a href={profile.github_url.startsWith('http') ? profile.github_url : `https://${profile.github_url}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" title="GitHub">
+                        <Github className="h-5 w-5" />
+                      </a>
+                    )}
+                    {profile.linkedin_url && (
+                      <a href={profile.linkedin_url.startsWith('http') ? profile.linkedin_url : `https://${profile.linkedin_url}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" title="LinkedIn">
+                        <Linkedin className="h-5 w-5" />
+                      </a>
+                    )}
+                    {profile.portfolio_url && (
+                      <a href={profile.portfolio_url.startsWith('http') ? profile.portfolio_url : `https://${profile.portfolio_url}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" title="Portfolio">
+                        <Globe className="h-5 w-5" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <Badge variant="outline" className="border-primary/30 text-primary">{skills.length} Skills</Badge>
                   <Badge variant="outline" className="border-accent/30 text-accent">{activities.length} Activities</Badge>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Camera, Save, User } from 'lucide-react';
+import { ArrowLeft, Camera, Save, User, Github, Linkedin, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,6 +23,9 @@ const EditProfile = () => {
   const [academicYear, setAcademicYear] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [githubUrl, setGithubUrl] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -49,6 +52,9 @@ const EditProfile = () => {
       setAcademicYear(data.academic_year || '');
       setBio((data as any).bio || '');
       setAvatarUrl((data as any).avatar_url || null);
+      setGithubUrl((data as any).github_url || '');
+      setLinkedinUrl((data as any).linkedin_url || '');
+      setPortfolioUrl((data as any).portfolio_url || '');
     }
     setLoading(false);
   };
@@ -97,6 +103,9 @@ const EditProfile = () => {
         academic_year: academicYear,
         bio,
         avatar_url: avatarUrl,
+        github_url: githubUrl,
+        linkedin_url: linkedinUrl,
+        portfolio_url: portfolioUrl,
       } as any)
       .eq('user_id', userId);
 
@@ -234,6 +243,43 @@ const EditProfile = () => {
                 maxLength={300}
               />
               <p className="text-xs text-muted-foreground text-right">{bio.length}/300</p>
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-4 pt-4 border-t border-border">
+              <h3 className="text-sm font-medium text-foreground">Social Links (Optional)</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Github className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <Input
+                    placeholder="GitHub URL (e.g. https://github.com/username)"
+                    value={githubUrl}
+                    onChange={(e) => setGithubUrl(e.target.value)}
+                    className="bg-muted/50 border-border"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Linkedin className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <Input
+                    placeholder="LinkedIn URL (e.g. https://linkedin.com/in/username)"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    className="bg-muted/50 border-border"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <Input
+                    placeholder="Portfolio URL (e.g. https://mywebsite.com)"
+                    value={portfolioUrl}
+                    onChange={(e) => setPortfolioUrl(e.target.value)}
+                    className="bg-muted/50 border-border"
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

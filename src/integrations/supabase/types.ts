@@ -194,7 +194,10 @@ export type Database = {
           department: string | null
           email: string
           full_name: string
+          github_url: string | null
           id: string
+          linkedin_url: string | null
+          portfolio_url: string | null
           updated_at: string
           user_id: string
         }
@@ -206,7 +209,10 @@ export type Database = {
           department?: string | null
           email: string
           full_name: string
+          github_url?: string | null
           id?: string
+          linkedin_url?: string | null
+          portfolio_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -218,7 +224,10 @@ export type Database = {
           department?: string | null
           email?: string
           full_name?: string
+          github_url?: string | null
           id?: string
+          linkedin_url?: string | null
+          portfolio_url?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import OAuthConsent from "./pages/OAuthConsent";
 import SkillDetail from "./components/SkillDetail";
 import ActivityDetail from "./components/ActivityDetail";
+import ProjectDetail from "./components/ProjectDetail";
 import AllSkills from "./components/AllSkills";
 import AllActivities from "./components/AllActivities";
 import People from "./components/People";

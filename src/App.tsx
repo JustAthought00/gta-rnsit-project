@@ -17,7 +17,6 @@ import AllActivities from "./components/AllActivities";
 import People from "./components/People";
 import UserProfile from "./components/UserProfile";
 import EditProfile from "./components/EditProfile";
-import ProjectDetail from "./components/ProjectDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

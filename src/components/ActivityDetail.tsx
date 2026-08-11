@@ -62,14 +62,21 @@ const ActivityDetail = () => {
     // First check if it's a UUID (database activity)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (activityId && uuidRegex.test(activityId)) {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('activities')
-        .select('*, profiles(full_name, department, academic_year)')
+        .select('*')
         .eq('id', activityId)
-        .single();
-      
+        .maybeSingle();
+
       if (data) {
-        setDbActivity(data);
+        // No FK between activities and profiles for PostgREST to auto-embed —
+        // both just reference auth.users independently — so fetch the owner separately.
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('full_name, department, academic_year')
+          .eq('user_id', data.user_id)
+          .maybeSingle();
+        setDbActivity({ ...data, profiles: ownerProfile });
       }
     }
     setLoading(false);
@@ -246,7 +253,10 @@ const ActivityDetail = () => {
             {activity.maxParticipants && (
               <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
                 <Users className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Up to {activity.maxParticipants} participants</span>
+                <span className="font-semibold">
+                  {participantIds.length} / {activity.maxParticipants} joined
+                  {isFull && ' — Full'}
+                </span>
               </div>
             )}
           </div>
@@ -306,9 +316,27 @@ const ActivityDetail = () => {
                   </div>
                 )}
                 {user?.id !== activity.ownerUserId && (
-                  <div className="pt-4 border-t border-border/50">
+                  <div className="pt-4 border-t border-border/50 flex flex-wrap gap-3">
                     <Button
-                      className="plasma-button text-primary-foreground"
+                      variant={isJoined ? 'outline' : 'default'}
+                      className={isJoined ? 'border-primary/40' : 'plasma-button text-primary-foreground'}
+                      onClick={toggleJoin}
+                      disabled={joining || (!isJoined && isFull && isSignedIn)}
+                    >
+                      {isJoined ? <UserMinus className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
+                      {!isSignedIn
+                        ? 'Sign In to Join'
+                        : joining
+                          ? 'Please wait...'
+                          : isJoined
+                            ? 'Leave Activity'
+                            : isFull
+                              ? 'Activity Full'
+                              : 'Join Activity'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-primary/40"
                       onClick={handleMessageOrganizer}
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />

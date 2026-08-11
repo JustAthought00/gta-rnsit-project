@@ -27,6 +27,7 @@ const Home = () => {
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchScope, setSearchScope] = useState<'skills' | 'activities' | 'people'>('skills');
   const [dbSkills, setDbSkills] = useState<any[]>([]);
   const [dbActivities, setDbActivities] = useState<any[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
@@ -237,8 +238,7 @@ const Home = () => {
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchTerm.trim()) {
-      // Search against real data on the skills browser page
-      navigate(`/skills?q=${encodeURIComponent(searchTerm.trim())}`);
+      navigate(`/${searchScope}?q=${encodeURIComponent(searchTerm.trim())}`);
       setSearchTerm('');
     }
   };
@@ -338,17 +338,27 @@ const Home = () => {
               </h1>
             </div>
             
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="hidden md:flex items-center flex-1 max-w-md mx-8 gap-2">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  placeholder="Search skills, activities, or people..." 
+                <Input
+                  placeholder={`Search ${searchScope}...`}
                   className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleSearch}
                 />
               </div>
+              <select
+                value={searchScope}
+                onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
+                aria-label="Search in"
+                className="text-xs bg-card/50 backdrop-blur-sm border border-primary/20 rounded-md px-2 py-2 text-muted-foreground focus:border-primary/50 focus:outline-none"
+              >
+                <option value="skills">Skills</option>
+                <option value="activities">Activities</option>
+                <option value="people">People</option>
+              </select>
             </div>
 
             <div className="flex items-center space-x-1 md:space-x-3">
@@ -428,17 +438,27 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="md:hidden mt-3">
-            <div className="relative">
+          <div className="md:hidden mt-3 flex items-center gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input 
-                placeholder="Search skills, activities, or people..." 
+              <Input
+                placeholder={`Search ${searchScope}...`}
                 className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleSearch}
               />
             </div>
+            <select
+              value={searchScope}
+              onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
+              aria-label="Search in"
+              className="text-xs bg-card/50 backdrop-blur-sm border border-primary/20 rounded-md px-2 py-2 text-muted-foreground focus:border-primary/50 focus:outline-none"
+            >
+              <option value="skills">Skills</option>
+              <option value="activities">Activities</option>
+              <option value="people">People</option>
+            </select>
           </div>
         </div>
       </header>
@@ -491,6 +511,15 @@ const Home = () => {
             >
               <Calendar className="mr-2 h-5 w-5" />
               Browse Activities
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-primary/30 text-foreground hover:bg-primary/10 w-full sm:w-auto"
+              onClick={() => navigate('/people')}
+            >
+              <UserIcon className="mr-2 h-5 w-5" />
+              Meet People
             </Button>
           </div>
         </div>

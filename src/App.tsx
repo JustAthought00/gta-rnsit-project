@@ -12,6 +12,7 @@ import SkillDetail from "./components/SkillDetail";
 import ActivityDetail from "./components/ActivityDetail";
 import AllSkills from "./components/AllSkills";
 import AllActivities from "./components/AllActivities";
+import People from "./components/People";
 import UserProfile from "./components/UserProfile";
 import EditProfile from "./components/EditProfile";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,7 @@ const App = () => {
             <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/skills" element={<AllSkills />} />
             <Route path="/activities" element={<AllActivities />} />
+            <Route path="/people" element={<People />} />
             <Route path="/skill/:skillId" element={<SkillDetail />} />
             <Route path="/activity/:activityId" element={<ActivityDetail />} />
             <Route path="/user/:userId" element={<UserProfile />} />

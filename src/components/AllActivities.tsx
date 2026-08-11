@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, Globe, Code, BookOpen, Palette, Dumbbell, Coffee, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +23,8 @@ const categories = ['All', ...Object.keys(categoryIcons)];
 
 const AllActivities = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [dbActivities, setDbActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Users, Star, Bookmark, BookmarkCheck, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Users, Star, Bookmark, BookmarkCheck, Pencil, Trash2, Send, Check, X, Clock3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -38,6 +38,11 @@ const SkillDetail = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [myRequest, setMyRequest] = useState<any>(null);
+  const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [submittingRequest, setSubmittingRequest] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -164,6 +169,91 @@ const SkillDetail = () => {
     setSubmittingReview(false);
   };
 
+  useEffect(() => {
+    if (!skillId || !currentUser || !dbSkill) return;
+    fetchRequests();
+  }, [skillId, currentUser, dbSkill]);
+
+  const fetchRequests = async () => {
+    if (!skillId || !currentUser || !dbSkill) return;
+
+    if (currentUser.id === dbSkill.user_id) {
+      // Owner: see everyone's requests for this skill
+      const { data } = await supabase
+        .from('skill_requests')
+        .select('*')
+        .eq('skill_id', skillId)
+        .order('created_at', { ascending: false });
+
+      if (data && data.length > 0) {
+        const requesterIds = [...new Set(data.map(r => r.requester_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', requesterIds);
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        setIncomingRequests(data.map(r => ({ ...r, requester: profileMap.get(r.requester_id) })));
+      } else {
+        setIncomingRequests([]);
+      }
+    } else {
+      // Requester: see my own latest request for this skill
+      const { data } = await supabase
+        .from('skill_requests')
+        .select('*')
+        .eq('skill_id', skillId)
+        .eq('requester_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setMyRequest(data || null);
+    }
+  };
+
+  const submitRequest = async () => {
+    if (!currentUser || !skillId || !dbSkill) {
+      toast.error('Please sign in to request this skill');
+      return;
+    }
+    setSubmittingRequest(true);
+    const { error } = await supabase.from('skill_requests').insert({
+      skill_id: skillId,
+      requester_id: currentUser.id,
+      owner_id: dbSkill.user_id,
+      message: requestMessage.trim() || null,
+    });
+    if (error) {
+      toast.error(error.message.includes('duplicate') ? 'You already have a pending request for this skill' : 'Failed to send request');
+    } else {
+      toast.success('Request sent!');
+      setRequestMessage('');
+      setShowRequestForm(false);
+      fetchRequests();
+    }
+    setSubmittingRequest(false);
+  };
+
+  const cancelRequest = async () => {
+    if (!myRequest) return;
+    const { error } = await supabase.from('skill_requests').delete().eq('id', myRequest.id);
+    if (error) {
+      toast.error('Failed to cancel request');
+    } else {
+      toast.success('Request cancelled');
+      setMyRequest(null);
+    }
+  };
+
+  const respondToRequest = async (requestId: string, status: 'accepted' | 'declined') => {
+    const { error } = await supabase.from('skill_requests').update({ status }).eq('id', requestId);
+    if (error) {
+      toast.error('Failed to update request');
+    } else {
+      toast.success(status === 'accepted' ? 'Request accepted' : 'Request declined');
+      fetchRequests();
+    }
+  };
+
   const deleteSkill = async () => {
     if (!skillId) return;
     setDeleting(true);
@@ -277,6 +367,130 @@ const SkillDetail = () => {
                   {dbSkill.availability && <Badge variant="outline" className="border-border">{dbSkill.availability}</Badge>}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Request this skill (non-owners) */}
+        {dbSkill && currentUser && currentUser.id !== dbSkill.user_id && (
+          <Card className="crystal-card mb-6">
+            <CardContent className="pt-6">
+              {!myRequest && !showRequestForm && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button onClick={() => setShowRequestForm(true)} className="plasma-button text-primary-foreground">
+                    <Send className="h-4 w-4 mr-2" />
+                    Request this Skill
+                  </Button>
+                  <Button variant="outline" className="border-primary/40" onClick={() => setShowMessagesModal(true)}>
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Message
+                  </Button>
+                </div>
+              )}
+
+              {!myRequest && showRequestForm && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">Send a request to {dbSkill.owner?.full_name || 'the owner'}</p>
+                  <Textarea
+                    value={requestMessage}
+                    onChange={(e) => setRequestMessage(e.target.value)}
+                    placeholder="What do you need help with? (optional)"
+                    className="bg-background border-border"
+                  />
+                  <div className="flex gap-3">
+                    <Button onClick={submitRequest} disabled={submittingRequest} size="sm" className="plasma-button text-primary-foreground">
+                      {submittingRequest ? 'Sending...' : 'Send Request'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowRequestForm(false)} disabled={submittingRequest}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {myRequest && myRequest.status === 'pending' && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Badge className="bg-accent/20 text-accent border-accent/30">
+                    <Clock3 className="h-3 w-3 mr-1" /> Request pending
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={cancelRequest}>Cancel Request</Button>
+                </div>
+              )}
+
+              {myRequest && myRequest.status === 'accepted' && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+                    <Check className="h-3 w-3 mr-1" /> Request accepted
+                  </Badge>
+                  <Button variant="outline" className="border-primary/40" onClick={() => setShowMessagesModal(true)}>
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Message to coordinate
+                  </Button>
+                </div>
+              )}
+
+              {myRequest && myRequest.status === 'declined' && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="outline" className="text-muted-foreground border-border">
+                    <X className="h-3 w-3 mr-1" /> Request declined
+                  </Badge>
+                  <Button size="sm" onClick={() => { setMyRequest(null); setShowRequestForm(true); }}>
+                    Send New Request
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Incoming requests (owner only) */}
+        {dbSkill && currentUser && currentUser.id === dbSkill.user_id && incomingRequests.length > 0 && (
+          <Card className="crystal-card mb-6">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Send className="h-5 w-5 text-primary" />
+                Requests ({incomingRequests.filter(r => r.status === 'pending').length} pending)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {incomingRequests.map(req => (
+                <div key={req.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/20">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={req.requester?.avatar_url} />
+                    <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                      {req.requester?.full_name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p
+                      className="text-sm font-medium text-foreground hover:text-primary cursor-pointer"
+                      onClick={() => navigate(`/user/${req.requester_id}`)}
+                    >
+                      {req.requester?.full_name || 'Anonymous'}
+                    </p>
+                    {req.message && <p className="text-sm text-muted-foreground mt-1">{req.message}</p>}
+                    <div className="mt-2">
+                      {req.status === 'pending' ? (
+                        <div className="flex gap-2">
+                          <Button size="sm" className="plasma-button text-primary-foreground" onClick={() => respondToRequest(req.id, 'accepted')}>
+                            <Check className="h-4 w-4 mr-1" /> Accept
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => respondToRequest(req.id, 'declined')}>
+                            <X className="h-4 w-4 mr-1" /> Decline
+                          </Button>
+                        </div>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={req.status === 'accepted' ? 'bg-green-500/20 text-green-500 border-green-500/30' : 'text-muted-foreground border-border'}
+                        >
+                          {req.status}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         )}

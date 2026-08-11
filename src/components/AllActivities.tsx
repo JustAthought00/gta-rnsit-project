@@ -97,7 +97,7 @@ const AllActivities = () => {
                 Back to Home
               </Button>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-foreground">
                   Campus Activities & Events
                 </h1>
                 <p className="text-muted-foreground text-sm">Everything happening at RNSIT, organized by students</p>
@@ -115,7 +115,7 @@ const AllActivities = () => {
               placeholder="Search events, venues..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-center bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
+              className="text-center bg-card border-2 border-foreground focus:border-primary"
             />
           </div>
 

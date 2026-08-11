@@ -143,7 +143,7 @@ const ProjectDetail = () => {
                 Back
               </Button>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{project.title}</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">{project.title}</h1>
               </div>
             </div>
             {isOwner && (

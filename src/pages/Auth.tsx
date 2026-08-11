@@ -253,7 +253,7 @@ const Auth = () => {
           </div>
           <div className="flex items-center space-x-2">
             <CheckCircle className="h-6 w-6 text-primary" />
-            <CardTitle className="text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <CardTitle className="text-2xl text-foreground">
               {viewMode === 'forgot' && 'Reset Password'}
               {viewMode === 'verify_sent' && 'Verify Email'}
               {viewMode === 'reset_password' && 'New Password'}

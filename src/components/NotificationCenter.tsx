@@ -87,14 +87,43 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
 
   const loadNotifications = async () => {
     if (!userId) return;
-    // Load unread messages count
-    const { count } = await supabase
+    
+    // Load unread messages
+    const { data: messages } = await supabase
       .from('messages')
-      .select('*', { count: 'exact', head: true })
+      .select('*')
       .eq('receiver_id', userId)
-      .eq('read', false);
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+      .limit(20);
 
-    setUnreadCount(count || 0);
+    const loadedNotifications: Notification[] = [];
+
+    if (messages && messages.length > 0) {
+      // Fetch sender profiles
+      const senderIds = [...new Set(messages.map(m => m.sender_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', senderIds);
+        
+      const profileMap = new Map();
+      profiles?.forEach(p => profileMap.set(p.user_id, p.full_name));
+
+      messages.forEach(msg => {
+        loadedNotifications.push({
+          id: msg.id,
+          type: 'message',
+          title: `New message from ${profileMap.get(msg.sender_id) || 'Someone'}`,
+          description: msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : ''),
+          time: msg.created_at,
+          read: false,
+        });
+      });
+    }
+
+    setNotifications(loadedNotifications);
+    setUnreadCount(loadedNotifications.length);
   };
 
   const markAllRead = () => {

@@ -207,7 +207,7 @@ const ActivityDetail = () => {
                 Back to Home
               </Button>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-foreground">
                   {activity.title}
                 </h1>
                 <p className="text-muted-foreground text-sm">{activity.description}</p>

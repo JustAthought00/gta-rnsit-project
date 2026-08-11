@@ -65,7 +65,7 @@ const People = () => {
               Back to Home
             </Button>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-foreground">
                 RNSITians
               </h1>
               <p className="text-muted-foreground text-sm">Browse students by name or department</p>
@@ -83,7 +83,7 @@ const People = () => {
                 placeholder="Search by name or department..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50 text-center"
+                className="pl-10 bg-transparent border-2 focus:border-primary text-center"
               />
             </div>
           </div>

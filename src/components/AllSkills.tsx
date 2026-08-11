@@ -134,7 +134,7 @@ const AllSkills = () => {
                 Back to Home
               </Button>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-foreground">
                   All Skills & Services
                 </h1>
                 <p className="text-muted-foreground text-sm">Browse all available skills and find the perfect talent</p>
@@ -154,7 +154,7 @@ const AllSkills = () => {
                 placeholder="Search skills or categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50 text-center"
+                className="pl-10 bg-transparent border-2 focus:border-primary text-center"
               />
             </div>
           </div>
@@ -220,7 +220,7 @@ const AllSkills = () => {
                         onClick={() => handleSkillClick(skill.id)}
                       >
                         <CardHeader className="pb-3 relative z-10">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300 shadow-glow">
+                          <div className="w-12 h-12 rounded-xl border-2 bg-transparent flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300 shadow-glow">
                             <IconComponent className="h-6 w-6 text-primary" />
                           </div>
                           <CardTitle className="text-lg text-foreground">{skill.name}</CardTitle>

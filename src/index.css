@@ -2,585 +2,222 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dual Theme Design System: Light = Clean Minimal, Dark = Holographic Dreamscape */
+/* Nothing Dot-Matrix: monochrome black/white with a single signature red
+   accent, transparent outline-only components, dot-matrix used sparingly
+   for numbers/labels — not decoration everywhere. */
 
 @layer base {
   :root {
-    /* Light Mode - Clean, Minimal Apple-inspired */
+    /* Light Mode */
     --background: 0 0% 100%;
-    --foreground: 240 10% 10%;
+    --foreground: 0 0% 7%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover-foreground: 0 0% 7%;
 
-    --primary: 221 83% 53%;
+    --primary: 350 100% 48%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 221 60% 95%;
+    --primary-soft: 350 100% 96%;
 
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 10% 30%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 5% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
 
-    --accent: 192 85% 40%;
+    --accent: 350 100% 48%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 55%;
+    --destructive: 0 85% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 350 100% 48%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 10% 10%;
-    --sidebar-primary: 221 83% 53%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 350 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 192 85% 40%;
+    --sidebar-accent: 350 100% 48%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 221 83% 53%;
-
-    /* Light mode shadows */
-    --shadow-glow: 0 4px 20px hsl(221 83% 53% / 0.15);
-    --shadow-crystal: 0 2px 10px hsl(0 0% 0% / 0.08);
-    --shadow-plasma: 0 4px 20px hsl(221 83% 53% / 0.2);
-
-    /* Soft Aurora — light mode's answer to dark mode's gradients, same DNA, pastel and restrained */
-    --gradient-void: radial-gradient(ellipse at center, hsl(220 45% 99%), hsl(220 35% 95%));
-    --gradient-plasma: linear-gradient(135deg, hsl(221 83% 53%), hsl(192 85% 40%));
-    --gradient-aurora: linear-gradient(90deg,
-      hsl(221 83% 60% / 0.05),
-      hsl(192 85% 50% / 0.05),
-      hsl(260 70% 65% / 0.05),
-      hsl(221 83% 60% / 0.05));
-    --gradient-crystal: linear-gradient(180deg, hsl(0 0% 100% / 0.9), hsl(220 30% 98% / 0.7));
-
-    --orb-1: radial-gradient(circle, hsl(221 83% 60% / 0.16), transparent 70%);
-    --orb-2: radial-gradient(circle, hsl(192 85% 45% / 0.14), transparent 70%);
-    --orb-3: radial-gradient(circle, hsl(260 70% 65% / 0.12), transparent 70%);
-    --orb-4: radial-gradient(circle, hsl(221 70% 55% / 0.1), transparent 70%);
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 350 100% 48%;
   }
 
   .dark {
-    /* Dark Mode - Midnight Circuit */
-    --background: 224 30% 4%;
-    --foreground: 214 20% 95%;
+    /* Dark Mode — Nothing's true home turf: black glass with red LEDs */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 97%;
 
-    --card: 224 32% 8%;
-    --card-foreground: 214 20% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 97%;
 
-    --popover: 224 32% 8%;
-    --popover-foreground: 214 20% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 97%;
 
-    --primary: 217 90% 61%;
+    --primary: 350 100% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 217 60% 20%;
+    --primary-soft: 350 60% 16%;
 
-    --secondary: 190 70% 15%;
-    --secondary-foreground: 190 60% 80%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 224 25% 12%;
-    --muted-foreground: 214 15% 55%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 62%;
 
-    --accent: 190 90% 50%;
-    --accent-foreground: 224 30% 6%;
+    --accent: 350 100% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 214 20% 95%;
+    --destructive: 0 85% 58%;
+    --destructive-foreground: 0 0% 97%;
 
-    --border: 224 30% 18%;
-    --input: 224 30% 12%;
-    --ring: 217 90% 61%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 350 100% 55%;
 
-    --sidebar-background: 224 25% 6%;
-    --sidebar-foreground: 214 20% 95%;
-    --sidebar-primary: 217 90% 61%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 97%;
+    --sidebar-primary: 350 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 190 90% 50%;
-    --sidebar-accent-foreground: 224 30% 6%;
-    --sidebar-border: 224 30% 18%;
-    --sidebar-ring: 217 90% 61%;
-
-    /* Circuit gradients */
-    --gradient-nebula: linear-gradient(135deg,
-      hsl(217 70% 20% / 0.8),
-      hsl(190 60% 15% / 0.6),
-      hsl(200 70% 25% / 0.7));
-    --gradient-aurora: linear-gradient(90deg,
-      hsl(217 80% 50% / 0.3),
-      hsl(190 70% 45% / 0.3),
-      hsl(200 75% 50% / 0.3),
-      hsl(217 80% 50% / 0.3));
-    --gradient-plasma: linear-gradient(135deg,
-      hsl(217 90% 61%),
-      hsl(190 90% 50%));
-    --gradient-crystal: linear-gradient(180deg,
-      hsl(224 30% 15% / 0.4),
-      hsl(224 30% 10% / 0.8));
-    --gradient-void: radial-gradient(ellipse at center,
-      hsl(217 45% 12%),
-      hsl(224 30% 6%));
-
-    /* Cinematic bloom shadows */
-    --shadow-glow: 0 0 60px hsl(217 90% 61% / 0.3), 0 0 120px hsl(190 90% 50% / 0.15);
-    --shadow-crystal: 0 8px 32px hsl(217 60% 30% / 0.3), 0 0 1px hsl(0 0% 100% / 0.1);
-    --shadow-plasma: 0 0 40px hsl(217 90% 61% / 0.5), 0 0 80px hsl(190 90% 50% / 0.3);
-
-    --glass-refraction: hsl(217 60% 80% / 0.05);
-
-    --orb-1: radial-gradient(circle, hsl(217 70% 40% / 0.6), transparent 70%);
-    --orb-2: radial-gradient(circle, hsl(190 60% 35% / 0.5), transparent 70%);
-    --orb-3: radial-gradient(circle, hsl(200 70% 45% / 0.4), transparent 70%);
-    --orb-4: radial-gradient(circle, hsl(230 65% 50% / 0.35), transparent 70%);
+    --sidebar-accent: 350 100% 55%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 350 100% 55%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {
     @apply bg-background text-foreground font-sans;
     min-height: 100vh;
-    background: var(--gradient-void);
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
   }
 }
 
 @layer components {
-  /* Kinetic Atmosphere - Nebula Background (Dark mode only) */
+  /* Dot-matrix texture — crisp, graphic, no blur. Nothing's signature pattern. */
   .nebula-atmosphere {
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
-    opacity: 1;
-    transition: opacity 0.5s ease;
+    background-image: radial-gradient(hsl(var(--foreground) / 0.12) 1px, transparent 1px);
+    background-size: 16px 16px;
   }
 
   .nebula-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.6;
-    animation: nebulaFloat 20s ease-in-out infinite;
+    display: none;
   }
 
-  .nebula-orb-1 {
-    width: 40vw;
-    height: 40vw;
-    background: var(--orb-1);
-    top: -10%;
-    left: -10%;
-    animation-duration: 25s;
-  }
-
-  .nebula-orb-2 {
-    width: 35vw;
-    height: 35vw;
-    background: var(--orb-2);
-    bottom: -15%;
-    right: -5%;
-    animation-duration: 30s;
-    animation-delay: -5s;
-  }
-
-  .nebula-orb-3 {
-    width: 30vw;
-    height: 30vw;
-    background: var(--orb-3);
-    top: 50%;
-    left: 30%;
-    animation-duration: 22s;
-    animation-delay: -10s;
-  }
-
-  .nebula-orb-4 {
-    width: 25vw;
-    height: 25vw;
-    background: var(--orb-4);
-    top: 20%;
-    right: 20%;
-    animation-duration: 28s;
-    animation-delay: -15s;
-  }
-
-  /* Crystalline Cards - Different styles for light/dark */
+  /* Transparent card: outline only, no solid fill — see-through like Nothing's back panel */
   .crystal-card {
-    @apply border border-border rounded-lg;
-    background: var(--gradient-crystal);
-    backdrop-filter: blur(12px) saturate(150%);
-    box-shadow: var(--shadow-crystal);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .crystal-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--gradient-aurora);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    animation: auroraShift 8s ease-in-out infinite;
-    pointer-events: none;
+    @apply rounded-2xl border bg-card/70 backdrop-blur-md;
+    transition: border-color 0.2s ease, transform 0.15s ease;
   }
 
   .crystal-card:hover {
+    border-color: hsl(var(--primary));
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px hsl(221 83% 53% / 0.12), var(--shadow-crystal);
   }
 
-  .crystal-card:hover::before {
-    opacity: 1;
-  }
-
-  /* Dark mode crystal card with holographic effect */
-  .dark .crystal-card {
-    background: linear-gradient(135deg,
-      hsl(224 30% 15% / 0.4),
-      hsl(224 30% 10% / 0.6));
-    backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid hsl(217 60% 50% / 0.15);
-    box-shadow:
-      0 8px 32px hsl(217 60% 30% / 0.2),
-      inset 0 1px 0 hsl(0 0% 100% / 0.05),
-      0 0 0 1px hsl(0 0% 100% / 0.02);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .dark .crystal-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--gradient-aurora);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    animation: auroraShift 8s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  .dark .crystal-card:hover::before {
-    opacity: 1;
-  }
-
-  .dark .crystal-card::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(
-      from 0deg,
-      transparent,
-      hsl(217 80% 70% / 0.1) 10%,
-      transparent 20%
-    );
-    animation: causticRotate 15s linear infinite;
-    pointer-events: none;
-  }
-
-  /* Plasma Button - Different styles for light/dark */
+  /* Button: solid red, pill-shaped like Nothing's toggle switches */
   .plasma-button {
-    @apply text-primary-foreground;
-    background: var(--gradient-plasma);
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    @apply bg-primary text-primary-foreground rounded-full font-semibold;
+    transition: opacity 0.15s ease, transform 0.1s ease;
   }
 
   .plasma-button:hover {
+    opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-plasma);
   }
 
-  /* Dark mode plasma button with living energy effect */
-  .dark .plasma-button {
-    background: var(--gradient-plasma);
-    box-shadow: var(--shadow-plasma);
+  .plasma-button:active {
+    opacity: 0.8;
+    transform: translateY(0);
   }
 
-  .dark .plasma-button::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-      hsl(0 0% 100% / 0.3) 0%, 
-      transparent 50%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .dark .plasma-button:hover::before {
-    opacity: 1;
-  }
-
-  .dark .plasma-button::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    background: linear-gradient(135deg, 
-      hsl(0 0% 100% / 0.1),
-      transparent 50%);
-    border-radius: inherit;
-    pointer-events: none;
-  }
-
-  .dark .plasma-button:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      var(--shadow-plasma),
-      0 20px 40px hsl(217 90% 61% / 0.3);
-  }
-
-  /* Glass Header - Different styles for light/dark */
   .glass-header {
-    @apply bg-background/80 backdrop-blur-md border-b border-border;
-    box-shadow: 0 1px 20px hsl(221 83% 53% / 0.06);
+    @apply bg-background/90 backdrop-blur-md border-b;
   }
 
-  .dark .glass-header {
-    background: hsl(224 30% 10% / 0.7);
-    backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid hsl(217 60% 50% / 0.1);
-  }
-
-  /* Cinematic Bloom (Dark mode only) */
-  .bloom-effect {
-    filter: blur(0);
-    position: relative;
-  }
-
-  .dark .bloom-effect::after {
-    content: '';
-    position: absolute;
-    inset: -20%;
-    background: inherit;
-    filter: blur(40px);
-    opacity: 0.4;
-    z-index: -1;
-    animation: bloomPulse 4s ease-in-out infinite;
-  }
-
-  /* Electric Pulse - gentle breathing in light, full neon pulse in dark */
+  /* Logo mark: static red, small LED-like blink instead of a soft glow pulse */
   .electric-pulse {
     @apply text-primary;
-    animation: softPulse 3s ease-in-out infinite;
-  }
-
-  .dark .electric-pulse {
-    animation: electricPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    filter: drop-shadow(0 0 10px hsl(217 90% 61% / 0.5));
+    animation: ledBlink 2.6s step-end infinite;
   }
 
   .electric-glow {
-    box-shadow: var(--shadow-glow);
+    box-shadow: none;
   }
 
-  .dark .electric-glow {
-    animation: glowPulse 3s ease-in-out infinite;
-  }
-
-  /* Gradient utilities */
   .gradient-electric {
     @apply bg-primary;
-  }
-
-  .dark .gradient-electric {
-    background: var(--gradient-plasma);
   }
 
   .gradient-nebula {
     @apply bg-muted;
   }
 
-  .dark .gradient-nebula {
-    background: var(--gradient-nebula);
-  }
-
-  /* Motion animations - gentle floating in both themes */
-  .animate-float-slow {
-    animation: floatSlow 6s ease-in-out infinite;
-  }
-
-  .animate-float-delayed {
-    animation: floatSlow 8s ease-in-out infinite 2s;
-  }
-
-  .animate-float-reverse {
-    animation: floatReverse 7s ease-in-out infinite 1s;
-  }
-
-  .animate-blob {
-    animation: blob 7s ease-in-out infinite;
-  }
-
+  .animate-float-slow,
+  .animate-float-delayed,
+  .animate-float-reverse,
+  .animate-blob,
   .animate-blob-delayed {
-    animation: blob 9s ease-in-out infinite 3s;
+    animation: none;
   }
 
   .transition-smooth {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
+    animation: fadeInUp 0.5s ease-out forwards;
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
 
-  /* Shadow glow utility */
   .shadow-glow {
-    box-shadow: var(--shadow-glow);
+    box-shadow: none;
+  }
+
+  /* Dot-matrix label — used sparingly: numbers, tags, the wordmark. Not body text. */
+  .font-dot {
+    letter-spacing: 0.05em;
   }
 }
 
 @layer utilities {
-  /* Nebula floating animation */
-  @keyframes nebulaFloat {
-    0%, 100% {
-      transform: translate(0, 0) scale(1);
+  @keyframes ledBlink {
+    0%, 85%, 100% {
+      opacity: 1;
     }
-    25% {
-      transform: translate(5%, 10%) scale(1.1);
-    }
-    50% {
-      transform: translate(-5%, 5%) scale(0.95);
-    }
-    75% {
-      transform: translate(3%, -5%) scale(1.05);
-    }
-  }
-
-  /* Aurora caustic shift */
-  @keyframes auroraShift {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  /* Caustic light rotation */
-  @keyframes causticRotate {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  /* Bloom pulse */
-  @keyframes bloomPulse {
-    0%, 100% {
+    90% {
       opacity: 0.3;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.5;
-      transform: scale(1.05);
-    }
-  }
-
-  /* Soft pulse (light mode) */
-  @keyframes softPulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.65;
-    }
-  }
-
-  /* Electric pulse */
-  @keyframes electricPulse {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-      filter: drop-shadow(0 0 10px hsl(217 90% 61% / 0.5));
-    }
-    50% {
-      opacity: 0.9;
-      transform: scale(1.05);
-      filter: drop-shadow(0 0 20px hsl(217 90% 61% / 0.7));
-    }
-  }
-
-  /* Glow pulse */
-  @keyframes glowPulse {
-    0%, 100% {
-      box-shadow: 0 0 40px hsl(217 90% 61% / 0.3), 0 0 80px hsl(190 90% 50% / 0.15);
-    }
-    50% {
-      box-shadow: 0 0 60px hsl(217 90% 61% / 0.4), 0 0 120px hsl(190 90% 50% / 0.25);
-    }
-  }
-
-  /* Float animations */
-  @keyframes floatSlow {
-    0%, 100% {
-      transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-      transform: translateY(-20px) rotate(5deg);
-    }
-  }
-
-  @keyframes floatReverse {
-    0%, 100% {
-      transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-      transform: translateY(15px) rotate(-3deg);
-    }
-  }
-
-  @keyframes blob {
-    0%, 100% {
-      transform: translateY(0px) scale(1);
-    }
-    33% {
-      transform: translateY(-10px) scale(1.1);
-    }
-    66% {
-      transform: translateY(5px) scale(0.95);
     }
   }
 
   @keyframes fadeInUp {
     0% {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(16px);
     }
     100% {
       opacity: 1;
       transform: translateY(0);
-    }
-  }
-
-  /* Plasma swirl for buttons */
-  @keyframes plasmaSwirl {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
     }
   }
 

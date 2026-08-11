@@ -333,7 +333,7 @@ const Home = () => {
             <div className="flex items-center space-x-2">
               <Zap className="h-6 w-6 md:h-8 md:w-8 text-primary electric-pulse" />
               <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">GTA</span>
+                <span className="text-primary">GTA</span>
                 <Badge className="hidden sm:inline-flex bg-primary/15 text-primary border-primary/30 text-[10px] md:text-xs tracking-wider">RNSIT</Badge>
               </h1>
             </div>
@@ -343,7 +343,7 @@ const Home = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder={`Search ${searchScope}...`}
-                  className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
+                  className="pl-10 bg-card border-2 border-primary/30 focus:border-primary"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleSearch}
@@ -353,7 +353,7 @@ const Home = () => {
                 value={searchScope}
                 onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
                 aria-label="Search in"
-                className="text-xs bg-card/50 backdrop-blur-sm border border-primary/20 rounded-md px-2 py-2 text-muted-foreground focus:border-primary/50 focus:outline-none"
+                className="text-xs bg-card border-2 border-primary/30 rounded-full px-2 py-2 text-muted-foreground focus:border-primary focus:outline-none"
               >
                 <option value="skills">Skills</option>
                 <option value="activities">Activities</option>
@@ -443,7 +443,7 @@ const Home = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={`Search ${searchScope}...`}
-                className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
+                className="pl-10 bg-card border-2 border-primary/30 focus:border-primary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleSearch}
@@ -453,7 +453,7 @@ const Home = () => {
               value={searchScope}
               onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
               aria-label="Search in"
-              className="text-xs bg-card/50 backdrop-blur-sm border border-primary/20 rounded-md px-2 py-2 text-muted-foreground focus:border-primary/50 focus:outline-none"
+              className="text-xs bg-card border-2 border-primary/30 rounded-full px-2 py-2 text-muted-foreground focus:border-primary focus:outline-none"
             >
               <option value="skills">Skills</option>
               <option value="activities">Activities</option>
@@ -466,28 +466,28 @@ const Home = () => {
       {/* Hero Section */}
       <section className="py-8 md:py-16 px-4 relative overflow-hidden z-10">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="hidden md:block absolute top-20 left-10 w-12 h-12 rounded-full bg-primary/20 backdrop-blur-sm flex items-center justify-center animate-float-slow border border-primary/20">
-            <Code className="h-6 w-6 text-primary" />
+          <div className="hidden md:block absolute top-20 left-10 w-12 h-12 rounded-2xl bg-primary rotate-12 flex items-center justify-center animate-float-slow border-2 border-white shadow-glow">
+            <Code className="h-6 w-6 text-primary-foreground" />
           </div>
-          <div className="absolute top-16 md:top-32 right-4 md:right-20 w-8 md:w-10 h-8 md:h-10 rounded-full bg-accent/20 backdrop-blur-sm flex items-center justify-center animate-float-delayed border border-accent/20">
-            <Camera className="h-4 md:h-5 w-4 md:w-5 text-accent" />
+          <div className="absolute top-16 md:top-32 right-4 md:right-20 w-8 md:w-10 h-8 md:h-10 rounded-full bg-accent -rotate-6 flex items-center justify-center animate-float-delayed border-2 border-white shadow-glow">
+            <Camera className="h-4 md:h-5 w-4 md:w-5 text-accent-foreground" />
           </div>
-          <div className="hidden md:block absolute bottom-32 left-20 w-14 h-14 rounded-full bg-secondary/40 backdrop-blur-sm flex items-center justify-center animate-float-reverse border border-secondary-foreground/20">
-            <PenTool className="h-7 w-7 text-secondary-foreground" />
+          <div className="hidden md:block absolute bottom-32 left-20 w-14 h-14 rounded-2xl bg-[hsl(50_95%_60%)] rotate-6 flex items-center justify-center animate-float-reverse border-2 border-white shadow-glow">
+            <PenTool className="h-7 w-7 text-foreground" />
           </div>
-          <div className="absolute top-24 md:top-40 right-8 md:right-40 w-6 md:w-8 h-6 md:h-8 rounded-full bg-primary/15 backdrop-blur-sm flex items-center justify-center animate-float-slow border border-primary/20">
-            <Palette className="h-3 md:h-4 w-3 md:w-4 text-primary" />
+          <div className="absolute top-24 md:top-40 right-8 md:right-40 w-6 md:w-8 h-6 md:h-8 rounded-full bg-primary -rotate-12 flex items-center justify-center animate-float-slow border-2 border-white shadow-glow">
+            <Palette className="h-3 md:h-4 w-3 md:w-4 text-primary-foreground" />
           </div>
-          <div className="absolute bottom-20 md:bottom-40 right-6 md:right-16 w-9 md:w-11 h-9 md:h-11 rounded-full bg-accent/15 backdrop-blur-sm flex items-center justify-center animate-float-delayed border border-accent/20">
-            <Video className="h-4 md:h-5 w-4 md:w-5 text-accent" />
+          <div className="absolute bottom-20 md:bottom-40 right-6 md:right-16 w-9 md:w-11 h-9 md:h-11 rounded-2xl bg-accent rotate-12 flex items-center justify-center animate-float-delayed border-2 border-white shadow-glow">
+            <Video className="h-4 md:h-5 w-4 md:w-5 text-accent-foreground" />
           </div>
-          <div className="hidden md:block absolute top-60 left-32 w-9 h-9 rounded-full bg-primary/10 backdrop-blur-sm flex items-center justify-center animate-float-reverse border border-primary/10">
-            <Mic className="h-4 w-4 text-primary" />
+          <div className="hidden md:block absolute top-60 left-32 w-9 h-9 rounded-full bg-[hsl(50_95%_60%)] flex items-center justify-center animate-float-reverse border-2 border-white shadow-glow">
+            <Mic className="h-4 w-4 text-foreground" />
           </div>
         </div>
 
         <div className="container mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 text-foreground text-stamp">
             RNSIT Runs on Skills
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-4">
@@ -563,8 +563,8 @@ const Home = () => {
                   onClick={() => handleCategoryClick(category.name)}
                 >
                   <CardHeader className="pb-2 md:pb-3 relative z-10">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-all duration-300 shadow-glow">
-                      <IconComponent className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-primary flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-all duration-300 shadow-glow">
+                      <IconComponent className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-base md:text-lg text-foreground">{category.name}</CardTitle>
                     <CardDescription className="text-sm text-muted-foreground">
@@ -590,8 +590,8 @@ const Home = () => {
                     onClick={() => handleSkillClick(skill.id)}
                   >
                     <CardHeader className="pb-2 md:pb-3 relative z-10">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-accent/30 to-primary/30 flex items-center justify-center mb-2 md:mb-3 shadow-glow">
-                        <Code className="h-5 w-5 md:h-6 md:w-6 text-accent" />
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-accent flex items-center justify-center mb-2 md:mb-3 shadow-glow">
+                        <Code className="h-5 w-5 md:h-6 md:w-6 text-accent-foreground" />
                       </div>
                       <CardTitle className="text-base md:text-lg text-foreground">{skill.title}</CardTitle>
                       <CardDescription className="text-sm line-clamp-2 text-muted-foreground">
@@ -714,7 +714,7 @@ const Home = () => {
         <section className="py-12 md:py-16 px-4 relative z-10">
           <div className="container mx-auto text-center">
             <div className="crystal-card p-8 md:p-12 max-w-2xl mx-auto">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h3 className="text-2xl md:text-3xl font-bold mb-4 text-primary">
                 Ready to Connect?
               </h3>
               <p className="text-muted-foreground mb-6 md:mb-8 max-w-xl mx-auto">

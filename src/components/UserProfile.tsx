@@ -109,12 +109,34 @@ const UserProfile = () => {
       toast.error("You can't message yourself");
       return;
     }
+
+    // Ensure connection exists
+    const { data: existingConn } = await supabase
+      .from('connections')
+      .select('*')
+      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`)
+      .maybeSingle();
+      
+    if (!existingConn) {
+      await supabase.from('connections').insert({
+        sender_id: currentUser.id,
+        receiver_id: userId,
+        status: 'pending'
+      });
+    }
+
     const { error } = await supabase.from('messages').insert({
       sender_id: currentUser.id,
       receiver_id: userId,
       content: `👋 Hi ${profile?.full_name?.split(' ')[0]}! I'd like to connect with you.`
     });
+    
     if (error) { toast.error('Failed to start conversation'); return; }
+    
+    // Dispatch custom event to tell MessagesModal to open this specific conversation
+    const event = new CustomEvent('openMessages', { detail: { conversationUserId: userId } });
+    window.dispatchEvent(event);
+    
     toast.success('Conversation started!');
     setShowMessagesModal(true);
   };

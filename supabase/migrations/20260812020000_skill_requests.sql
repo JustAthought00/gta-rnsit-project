@@ -32,5 +32,16 @@ CREATE POLICY "Owner can update request status" ON public.skill_requests
 CREATE POLICY "Requester can cancel own pending request" ON public.skill_requests
   FOR DELETE USING (auth.uid() = requester_id);
 
+-- Recreated defensively: this function was referenced by the original schema
+-- migration's triggers but doesn't actually exist on the live database (it was
+-- provisioned outside the CLI), which would otherwise break this trigger too.
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = public;
+
 CREATE TRIGGER update_skill_requests_updated_at BEFORE UPDATE ON public.skill_requests
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

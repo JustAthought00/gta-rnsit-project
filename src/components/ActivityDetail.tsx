@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, MapPin, Clock, Crown, MessageCircle, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, MapPin, Clock, Crown, MessageCircle, Pencil, Trash2, UserCheck, UserMinus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -32,6 +32,8 @@ const ActivityDetail = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [joining, setJoining] = useState(false);
 
   // Check auth and fetch activity
   useEffect(() => {
@@ -44,7 +46,17 @@ const ActivityDetail = () => {
     };
     checkAuth();
     fetchActivity();
+    fetchParticipants();
   }, [activityId]);
+
+  const fetchParticipants = async () => {
+    if (!activityId) return;
+    const { data } = await supabase
+      .from('activity_participants')
+      .select('user_id')
+      .eq('activity_id', activityId);
+    setParticipantIds(data?.map(p => p.user_id) || []);
+  };
 
   const fetchActivity = async () => {
     // First check if it's a UUID (database activity)
@@ -82,6 +94,46 @@ const ActivityDetail = () => {
     }
     toast.success('Activity deleted');
     navigate('/');
+  };
+
+  const isJoined = user ? participantIds.includes(user.id) : false;
+  const isFull = dbActivity?.max_participants ? participantIds.length >= dbActivity.max_participants : false;
+
+  const toggleJoin = async () => {
+    if (!user || !activityId) {
+      navigate('/auth');
+      return;
+    }
+    setJoining(true);
+    if (isJoined) {
+      const { error } = await supabase
+        .from('activity_participants')
+        .delete()
+        .eq('activity_id', activityId)
+        .eq('user_id', user.id);
+      if (error) {
+        toast.error('Failed to leave: ' + error.message);
+      } else {
+        toast.success('You left this activity');
+        setParticipantIds(prev => prev.filter(id => id !== user.id));
+      }
+    } else {
+      if (isFull) {
+        toast.error('This activity is full');
+        setJoining(false);
+        return;
+      }
+      const { error } = await supabase
+        .from('activity_participants')
+        .insert({ activity_id: activityId, user_id: user.id });
+      if (error) {
+        toast.error('Failed to join: ' + error.message);
+      } else {
+        toast.success("You're in!");
+        setParticipantIds(prev => [...prev, user.id]);
+      }
+    }
+    setJoining(false);
   };
 
   // All activities come from the database — nothing hardcoded

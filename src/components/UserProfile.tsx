@@ -302,7 +302,11 @@ const UserProfile = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {projects.map((project) => (
-                <Card key={project.id} className="crystal-card hover:border-accent/30 transition-all">
+                <Card 
+                  key={project.id} 
+                  className="crystal-card hover:border-accent/30 transition-all cursor-pointer"
+                  onClick={() => navigate(`/project/${project.id}`)}
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-foreground">{project.title}</CardTitle>
                   </CardHeader>
@@ -316,7 +320,13 @@ const UserProfile = () => {
                         </div>
                       )}
                       {project.github_link && (
-                        <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors mt-2">
+                        <a 
+                          href={project.github_link.startsWith('http') ? project.github_link : `https://${project.github_link}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex items-center gap-2 hover:text-primary transition-colors mt-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Github className="h-4 w-4" /> View on GitHub
                         </a>
                       )}

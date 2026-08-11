@@ -62,6 +62,7 @@ const App = () => {
             <Route path="/people" element={<People />} />
             <Route path="/skill/:skillId" element={<SkillDetail />} />
             <Route path="/activity/:activityId" element={<ActivityDetail />} />
+            <Route path="/project/:projectId" element={<ProjectDetail />} />
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

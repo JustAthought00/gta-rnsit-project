@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,22 +7,52 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+interface SkillToEdit {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  experience: string;
+  hourly_rate: string;
+  availability: string;
+}
+
 interface AddSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSkillAdded?: () => void;
+  skillToEdit?: SkillToEdit | null;
 }
 
-const AddSkillModal = ({ isOpen, onClose, onSkillAdded }: AddSkillModalProps) => {
+const emptyForm = {
+  title: '',
+  description: '',
+  category: '',
+  experience: '',
+  hourlyRate: '',
+  availability: ''
+};
+
+const AddSkillModal = ({ isOpen, onClose, onSkillAdded, skillToEdit }: AddSkillModalProps) => {
+  const isEditing = !!skillToEdit;
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    experience: '',
-    hourlyRate: '',
-    availability: ''
-  });
+  const [formData, setFormData] = useState(emptyForm);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (skillToEdit) {
+      setFormData({
+        title: skillToEdit.title || '',
+        description: skillToEdit.description || '',
+        category: skillToEdit.category || '',
+        experience: skillToEdit.experience || '',
+        hourlyRate: skillToEdit.hourly_rate || '',
+        availability: skillToEdit.availability || ''
+      });
+    } else {
+      setFormData(emptyForm);
+    }
+  }, [isOpen, skillToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,35 +60,31 @@ const AddSkillModal = ({ isOpen, onClose, onSkillAdded }: AddSkillModalProps) =>
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast.error('Please sign in to add a skill');
         setIsLoading(false);
         return;
       }
 
-      const { error } = await supabase.from('skills').insert({
-        user_id: user.id,
+      const payload = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
         experience: formData.experience,
         hourly_rate: formData.hourlyRate,
         availability: formData.availability
-      });
+      };
+
+      const { error } = isEditing
+        ? await supabase.from('skills').update(payload).eq('id', skillToEdit!.id).eq('user_id', user.id)
+        : await supabase.from('skills').insert({ user_id: user.id, ...payload });
 
       if (error) {
-        toast.error('Failed to add skill: ' + error.message);
+        toast.error(`Failed to ${isEditing ? 'update' : 'add'} skill: ` + error.message);
       } else {
-        toast.success('Skill added successfully!');
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          experience: '',
-          hourlyRate: '',
-          availability: ''
-        });
+        toast.success(`Skill ${isEditing ? 'updated' : 'added'} successfully!`);
+        setFormData(emptyForm);
         onSkillAdded?.();
         onClose();
       }
@@ -75,7 +101,7 @@ const AddSkillModal = ({ isOpen, onClose, onSkillAdded }: AddSkillModalProps) =>
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-foreground">Add Your Skill</h2>
+          <h2 className="text-2xl font-bold text-foreground">{isEditing ? 'Edit Your Skill' : 'Add Your Skill'}</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -148,6 +174,7 @@ const AddSkillModal = ({ isOpen, onClose, onSkillAdded }: AddSkillModalProps) =>
               id="hourlyRate"
               required
               type="number"
+              min="0"
               value={formData.hourlyRate}
               onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
               placeholder="e.g., 500"
@@ -176,7 +203,7 @@ const AddSkillModal = ({ isOpen, onClose, onSkillAdded }: AddSkillModalProps) =>
               Cancel
             </Button>
             <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading ? 'Adding...' : 'Add Skill'}
+              {isLoading ? (isEditing ? 'Saving...' : 'Adding...') : (isEditing ? 'Save Changes' : 'Add Skill')}
             </Button>
           </div>
         </form>

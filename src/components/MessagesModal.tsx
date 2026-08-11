@@ -33,6 +33,8 @@ interface Conversation {
   last_message: string;
   last_message_time: string;
   unread_count: number;
+  connection_status?: string;
+  connection_receiver_id?: string;
 }
 
 interface Community {
@@ -57,7 +59,7 @@ interface MessagesModalProps {
 }
 
 const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => {
-  const [activeTab, setActiveTab] = useState<'direct' | 'communities'>('direct');
+  const [activeTab, setActiveTab] = useState<'direct' | 'communities' | 'requests'>('direct');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [communities, setCommunities] = useState<Community[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -192,6 +194,12 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
       setProfiles(profileMap);
     }
 
+    // Fetch connections
+    const { data: connectionsData } = await supabase
+      .from('connections')
+      .select('*')
+      .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+
     // Group by conversation
     const conversationsMap = new Map<string, Conversation>();
     allMessages.forEach(msg => {
@@ -227,6 +235,22 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     freshProfiles?.forEach(p => {
       const conv = conversationsMap.get(p.user_id);
       if (conv) conv.other_user_name = p.full_name;
+    });
+
+    // Merge connection statuses
+    const conns = connectionsData || [];
+    Array.from(conversationsMap.values()).forEach(conv => {
+      const conn = conns.find(c => 
+        (c.sender_id === currentUser.id && c.receiver_id === conv.other_user_id) || 
+        (c.receiver_id === currentUser.id && c.sender_id === conv.other_user_id)
+      );
+      if (conn) {
+        conv.connection_status = conn.status;
+        conv.connection_receiver_id = conn.receiver_id;
+      } else {
+        // If no connection exists but there are messages, assume accepted for backwards compatibility
+        conv.connection_status = 'accepted';
+      }
     });
 
     setConversations(Array.from(conversationsMap.values())
@@ -304,10 +328,28 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     }
   };
 
+  const ensureConnectionExists = async (otherUserId: string) => {
+    const { data: existingConn } = await supabase
+      .from('connections')
+      .select('*')
+      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`)
+      .maybeSingle();
+      
+    if (!existingConn) {
+      await supabase.from('connections').insert({
+        sender_id: currentUser.id,
+        receiver_id: otherUserId,
+        status: 'pending'
+      });
+    }
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUser) return;
 
-    if (activeTab === 'direct' && selectedConversation) {
+    if ((activeTab === 'direct' || activeTab === 'requests') && selectedConversation) {
+      await ensureConnectionExists(selectedConversation);
+      
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -343,6 +385,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
   };
 
   const startNewConversation = async (user: UserSearchResult) => {
+    await ensureConnectionExists(user.user_id);
     // Send an initial greeting message
     const { error } = await supabase
       .from('messages')
@@ -385,8 +428,14 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const filteredConversations = conversations.filter(c =>
-    c.other_user_name.toLowerCase().includes(searchTerm.toLowerCase())
+  const directConversations = conversations.filter(c =>
+    c.other_user_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (c.connection_status === 'accepted' || (c.connection_status === 'pending' && c.connection_receiver_id !== currentUser.id) || !c.connection_status)
+  );
+
+  const requestConversations = conversations.filter(c =>
+    c.other_user_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    c.connection_status === 'pending' && c.connection_receiver_id === currentUser.id
   );
 
   const filteredCommunities = communities.filter(c =>
@@ -520,15 +569,22 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
             </div>
             
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'communities')} className="mb-3">
-              <TabsList className="w-full grid grid-cols-2">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'direct' | 'communities' | 'requests')} className="mb-3">
+              <TabsList className="w-full grid grid-cols-3">
                 <TabsTrigger value="direct" className="text-sm">
-                  <MessageCircle className="h-4 w-4 mr-1" />
-                  Direct
+                  <MessageCircle className="h-4 w-4 mr-1 md:mr-2" />
+                  <span className="hidden md:inline">Direct</span>
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="text-sm relative">
+                  <UserPlus className="h-4 w-4 mr-1 md:mr-2" />
+                  <span className="hidden md:inline">Requests</span>
+                  {conversations.filter(c => c.connection_status === 'pending' && c.connection_receiver_id === currentUser.id).length > 0 && (
+                    <span className="absolute top-1 right-2 flex h-2 w-2 rounded-full bg-primary" />
+                  )}
                 </TabsTrigger>
                 <TabsTrigger value="communities" className="text-sm">
-                  <UsersIcon className="h-4 w-4 mr-1" />
-                  Communities
+                  <UsersIcon className="h-4 w-4 mr-1 md:mr-2" />
+                  <span className="hidden md:inline">Groups</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -563,14 +619,61 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
           <ScrollArea className="h-[calc(100vh-250px)] md:h-[350px]">
             {activeTab === 'direct' ? (
               <div className="p-0">
-                {filteredConversations.length === 0 ? (
+                {directConversations.length === 0 ? (
                   <div className="text-center text-muted-foreground py-12 px-4">
                     <MessageCircle className="h-10 w-10 mx-auto mb-3 opacity-50" />
                     <p className="text-base font-medium text-foreground">No Messages Yet</p>
                     <p className="text-sm">Click "New Conversation" to start chatting!</p>
                   </div>
                 ) : (
-                  filteredConversations.map((conversation) => (
+                  directConversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      onClick={() => {
+                        setSelectedConversation(conversation.id);
+                        loadMessages(conversation.id);
+                      }}
+                      className="p-3 md:p-4 cursor-pointer transition-all duration-200 hover:bg-muted active:bg-muted/80"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm">
+                            {getInitials(conversation.other_user_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-foreground truncate text-sm">
+                              {conversation.other_user_name}
+                            </p>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-muted-foreground">
+                                {formatTime(conversation.last_message_time)}
+                              </span>
+                              {conversation.unread_count > 0 && (
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mt-1">
+                            {conversation.last_message}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : activeTab === 'requests' ? (
+              <div className="p-0">
+                {requestConversations.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12 px-4">
+                    <UserPlus className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p className="text-base font-medium text-foreground">No Requests</p>
+                    <p className="text-sm">You have no pending message requests.</p>
+                  </div>
+                ) : (
+                  requestConversations.map((conversation) => (
                     <div
                       key={conversation.id}
                       onClick={() => {
@@ -769,29 +872,63 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                 </div>
               </ScrollArea>
 
-              {/* Message Input */}
-              <div className="p-3 md:p-4 border-t border-border bg-background">
-                <div className="flex items-center space-x-2 md:space-x-3">
-                  <div className="flex-1 relative">
-                    <Input
-                      placeholder="Message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                      className="rounded-2xl border-border pl-4 pr-12 bg-muted text-foreground placeholder:text-muted-foreground text-sm md:text-base py-2 md:py-2.5"
-                    />
-                    {newMessage.trim() && (
-                      <Button
-                        onClick={sendMessage}
-                        size="sm"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-6 w-6 p-1"
-                      >
-                        <Send className="h-3 w-3" />
-                      </Button>
-                    )}
+              {/* Message Input or Accept/Decline */}
+              {selectedConversation && currentConversation?.connection_status === 'pending' && currentConversation.connection_receiver_id === currentUser.id ? (
+                <div className="p-4 border-t border-border bg-background flex flex-col items-center justify-center gap-3">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Accept message request from {currentConversation.other_user_name}?
+                  </p>
+                  <div className="flex items-center justify-center gap-3 w-full max-w-sm">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
+                      onClick={async () => {
+                        await supabase.from('connections').update({ status: 'rejected' })
+                          .eq('sender_id', currentConversation.other_user_id)
+                          .eq('receiver_id', currentUser.id);
+                        handleBack();
+                        loadConversations();
+                      }}
+                    >
+                      Decline
+                    </Button>
+                    <Button 
+                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                      onClick={async () => {
+                        await supabase.from('connections').update({ status: 'accepted' })
+                          .eq('sender_id', currentConversation.other_user_id)
+                          .eq('receiver_id', currentUser.id);
+                        loadConversations();
+                      }}
+                    >
+                      Accept
+                    </Button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-3 md:p-4 border-t border-border bg-background">
+                  <div className="flex items-center space-x-2 md:space-x-3">
+                    <div className="flex-1 relative">
+                      <Input
+                        placeholder="Message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        className="rounded-2xl border-border pl-4 pr-12 bg-muted text-foreground placeholder:text-muted-foreground text-sm md:text-base py-2 md:py-2.5"
+                      />
+                      {newMessage.trim() && (
+                        <Button
+                          onClick={sendMessage}
+                          size="sm"
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-6 w-6 p-1"
+                        >
+                          <Send className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center bg-background">

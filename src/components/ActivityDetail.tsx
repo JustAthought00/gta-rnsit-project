@@ -1,13 +1,25 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, MapPin, Clock, Crown, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, MapPin, Clock, Crown, MessageCircle, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import MessagesModal from './MessagesModal';
 import NebulaBackground from './NebulaBackground';
+import AddActivityModal from './AddActivityModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const ActivityDetail = () => {
   const { activityId } = useParams();
@@ -17,6 +29,9 @@ const ActivityDetail = () => {
   const [user, setUser] = useState<any>(null);
   const [dbActivity, setDbActivity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Check auth and fetch activity
   useEffect(() => {
@@ -54,6 +69,19 @@ const ActivityDetail = () => {
       return;
     }
     setShowMessagesModal(true);
+  };
+
+  const deleteActivity = async () => {
+    if (!activityId) return;
+    setDeleting(true);
+    const { error } = await supabase.from('activities').delete().eq('id', activityId);
+    setDeleting(false);
+    if (error) {
+      toast.error('Failed to delete activity: ' + error.message);
+      return;
+    }
+    toast.success('Activity deleted');
+    navigate('/');
   };
 
   // All activities come from the database — nothing hardcoded
@@ -127,11 +155,25 @@ const ActivityDetail = () => {
               </div>
             </div>
             
-            {!isSignedIn && (
-              <Button onClick={handleSignIn} className="plasma-button text-primary-foreground">
-                Sign In to Join
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {user?.id === activity.ownerUserId && (
+                <>
+                  <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-foreground/70 hover:text-foreground hover:bg-primary/10">
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-foreground/70 hover:text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </>
+              )}
+              {!isSignedIn && (
+                <Button onClick={handleSignIn} className="plasma-button text-primary-foreground">
+                  Sign In to Join
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -234,6 +276,42 @@ const ActivityDetail = () => {
         onClose={() => setShowMessagesModal(false)}
         currentUser={user ? { id: user.id, fullName: user.user_metadata?.full_name || 'User' } : null}
       />
+
+      {dbActivity && (
+        <AddActivityModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onActivityAdded={() => fetchActivity()}
+          activityToEdit={{
+            id: dbActivity.id,
+            title: dbActivity.title,
+            description: dbActivity.description,
+            category: dbActivity.category,
+            date: dbActivity.date,
+            time: dbActivity.time,
+            venue: dbActivity.venue,
+            max_participants: dbActivity.max_participants,
+            requirements: dbActivity.requirements,
+          }}
+        />
+      )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this activity?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove "{activity.title}" and its reviews. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteActivity} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

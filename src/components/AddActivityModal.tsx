@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,23 +7,58 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ActivityToEdit {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  time: string;
+  venue: string;
+  max_participants: number | null;
+  requirements?: string;
+}
+
 interface AddActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
   onActivityAdded?: () => void;
+  activityToEdit?: ActivityToEdit | null;
 }
 
-const AddActivityModal = ({ isOpen, onClose, onActivityAdded }: AddActivityModalProps) => {
+const emptyForm = {
+  title: '',
+  description: '',
+  category: '',
+  date: '',
+  time: '',
+  venue: '',
+  maxParticipants: '',
+  requirements: ''
+};
+
+const AddActivityModal = ({ isOpen, onClose, onActivityAdded, activityToEdit }: AddActivityModalProps) => {
+  const isEditing = !!activityToEdit;
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    date: '',
-    time: '',
-    venue: '',
-    maxParticipants: ''
-  });
+  const [formData, setFormData] = useState(emptyForm);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (activityToEdit) {
+      setFormData({
+        title: activityToEdit.title || '',
+        description: activityToEdit.description || '',
+        category: activityToEdit.category || '',
+        date: activityToEdit.date || '',
+        time: activityToEdit.time || '',
+        venue: activityToEdit.venue || '',
+        maxParticipants: activityToEdit.max_participants?.toString() || '',
+        requirements: activityToEdit.requirements || ''
+      });
+    } else {
+      setFormData(emptyForm);
+    }
+  }, [isOpen, activityToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,37 +66,33 @@ const AddActivityModal = ({ isOpen, onClose, onActivityAdded }: AddActivityModal
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast.error('Please sign in to add an activity');
         setIsLoading(false);
         return;
       }
 
-      const { error } = await supabase.from('activities').insert({
-        user_id: user.id,
+      const payload = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
         date: formData.date,
         time: formData.time,
         venue: formData.venue,
-        max_participants: parseInt(formData.maxParticipants) || null
-      });
+        max_participants: parseInt(formData.maxParticipants) || null,
+        requirements: formData.requirements || null
+      };
+
+      const { error } = isEditing
+        ? await supabase.from('activities').update(payload).eq('id', activityToEdit!.id).eq('user_id', user.id)
+        : await supabase.from('activities').insert({ user_id: user.id, ...payload });
 
       if (error) {
-        toast.error('Failed to add activity: ' + error.message);
+        toast.error(`Failed to ${isEditing ? 'update' : 'add'} activity: ` + error.message);
       } else {
-        toast.success('Activity added successfully!');
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          date: '',
-          time: '',
-          venue: '',
-          maxParticipants: ''
-        });
+        toast.success(`Activity ${isEditing ? 'updated' : 'added'} successfully!`);
+        setFormData(emptyForm);
         onActivityAdded?.();
         onClose();
       }
@@ -78,7 +109,7 @@ const AddActivityModal = ({ isOpen, onClose, onActivityAdded }: AddActivityModal
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-foreground">Add Activity/Event</h2>
+          <h2 className="text-2xl font-bold text-foreground">{isEditing ? 'Edit Activity/Event' : 'Add Activity/Event'}</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -169,6 +200,7 @@ const AddActivityModal = ({ isOpen, onClose, onActivityAdded }: AddActivityModal
               id="maxParticipants"
               required
               type="number"
+              min="1"
               value={formData.maxParticipants}
               onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
               placeholder="e.g., 50"
@@ -180,7 +212,7 @@ const AddActivityModal = ({ isOpen, onClose, onActivityAdded }: AddActivityModal
               Cancel
             </Button>
             <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading ? 'Adding...' : 'Add Activity'}
+              {isLoading ? (isEditing ? 'Saving...' : 'Adding...') : (isEditing ? 'Save Changes' : 'Add Activity')}
             </Button>
           </div>
         </form>

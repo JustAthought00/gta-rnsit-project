@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Users, Star, Bookmark, BookmarkCheck } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Users, Star, Bookmark, BookmarkCheck, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,6 +11,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import NebulaBackground from './NebulaBackground';
 import MessagesModal from './MessagesModal';
+import AddSkillModal from './AddSkillModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const SkillDetail = () => {
   const { skillId } = useParams();
@@ -24,6 +35,9 @@ const SkillDetail = () => {
   const [newComment, setNewComment] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -150,6 +164,19 @@ const SkillDetail = () => {
     setSubmittingReview(false);
   };
 
+  const deleteSkill = async () => {
+    if (!skillId) return;
+    setDeleting(true);
+    const { error } = await supabase.from('skills').delete().eq('id', skillId);
+    setDeleting(false);
+    if (error) {
+      toast.error('Failed to delete skill: ' + error.message);
+      return;
+    }
+    toast.success('Skill deleted');
+    navigate('/');
+  };
+
   const skill = dbSkill ? {
     name: dbSkill.title,
     description: dbSkill.description || 'No description provided',
@@ -201,6 +228,18 @@ const SkillDetail = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {dbSkill && currentUser?.id === dbSkill.user_id && (
+                <>
+                  <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-muted-foreground hover:text-primary">
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-muted-foreground hover:text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </>
+              )}
               {dbSkill && (
                 <Button variant="ghost" size="sm" onClick={toggleBookmark} className="text-muted-foreground hover:text-primary">
                   {isBookmarked ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
@@ -309,6 +348,40 @@ const SkillDetail = () => {
       </div>
 
       <MessagesModal isOpen={showMessagesModal} onClose={() => setShowMessagesModal(false)} currentUser={currentUser} />
+
+      {dbSkill && (
+        <AddSkillModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSkillAdded={() => fetchSkillData()}
+          skillToEdit={{
+            id: dbSkill.id,
+            title: dbSkill.title,
+            description: dbSkill.description,
+            category: dbSkill.category,
+            experience: dbSkill.experience,
+            hourly_rate: dbSkill.hourly_rate,
+            availability: dbSkill.availability,
+          }}
+        />
+      )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this skill?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove "{skill.name}" and its reviews. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteSkill} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

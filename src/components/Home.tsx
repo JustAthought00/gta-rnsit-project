@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 import NotificationCenter from './NotificationCenter';
 import CampusPulse from './CampusPulse';
+import Footer from './Footer';
+import Watermark from './Watermark';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -331,8 +333,8 @@ const Home = () => {
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Zap className="h-6 w-6 md:h-8 md:w-8 text-primary electric-pulse" />
-              <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+              <Zap className="h-7 w-7 md:h-9 md:w-9 text-primary electric-pulse" />
+              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">GTA</span>
                 <Badge className="hidden sm:inline-flex bg-primary/15 text-primary border-primary/30 text-[10px] md:text-xs tracking-wider">RNSIT</Badge>
               </h1>
@@ -343,7 +345,7 @@ const Home = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder={`Search ${searchScope}...`}
-                  className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
+                  className="header-glow-field pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleSearch}
@@ -353,7 +355,7 @@ const Home = () => {
                 value={searchScope}
                 onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
                 aria-label="Search in"
-                className="text-xs bg-card/50 backdrop-blur-sm border border-primary/20 rounded-md px-2 py-2 text-muted-foreground focus:border-primary/50 focus:outline-none"
+                className="header-glow-field text-sm font-medium border rounded-md px-3 py-2.5 cursor-pointer focus:outline-none"
               >
                 <option value="skills">Skills</option>
                 <option value="activities">Activities</option>
@@ -366,7 +368,7 @@ const Home = () => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="text-muted-foreground hover:text-primary hover:bg-primary/10 p-2"
+                className="header-glow-btn p-2"
                 aria-label="Toggle theme"
               >
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -379,7 +381,7 @@ const Home = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowMessagesModal(true)}
-                    className="text-muted-foreground hover:text-primary hover:bg-primary/10 relative p-2"
+                    className="header-glow-btn relative p-2"
                     aria-label="Messages"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -395,7 +397,7 @@ const Home = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate(`/user/${user?.id}`)}
-                    className="text-muted-foreground hover:text-primary hover:bg-primary/10 p-2"
+                    className="header-glow-btn p-2"
                     aria-label="Profile"
                   >
                     <UserIcon className="h-4 w-4" />
@@ -407,7 +409,7 @@ const Home = () => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    className="header-glow-btn"
                     onClick={handleSignOut}
                   >
                     <span className="hidden md:inline">Sign Out</span>
@@ -419,7 +421,7 @@ const Home = () => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    className="header-glow-btn"
                     onClick={handleSignIn}
                   >
                     <span className="hidden md:inline">Sign In</span>
@@ -443,7 +445,7 @@ const Home = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={`Search ${searchScope}...`}
-                className="pl-10 bg-card/50 backdrop-blur-sm border-primary/20 focus:border-primary/50"
+                className="header-glow-field pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleSearch}
@@ -453,7 +455,7 @@ const Home = () => {
               value={searchScope}
               onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
               aria-label="Search in"
-              className="text-xs bg-card/50 backdrop-blur-sm border border-primary/20 rounded-md px-2 py-2 text-muted-foreground focus:border-primary/50 focus:outline-none"
+              className="header-glow-field text-sm font-medium border rounded-md px-3 py-2.5 cursor-pointer focus:outline-none"
             >
               <option value="skills">Skills</option>
               <option value="activities">Activities</option>
@@ -464,40 +466,64 @@ const Home = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-8 md:py-16 px-4 relative overflow-hidden z-10">
+      <section className="py-12 md:py-20 lg:py-28 px-4 relative overflow-hidden z-10">
+<Watermark icon={Zap} className="left-[8%] top-[7%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-12" />
+        <Watermark icon={Calendar} color="violet" className="left-[24%] top-[12%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[18deg]" />
+        <Watermark icon={Code} className="left-[47%] top-[6%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-6" />
+        <Watermark icon={Music} color="pink" className="left-[70%] top-[10%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[24deg]" />
+        <Watermark icon={Briefcase} color="cyan" className="left-[92%] top-[6%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[35deg]" />
+        <Watermark icon={PenTool} color="cyan" className="left-[13%] top-[32%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+        <Watermark icon={Globe} color="accent" className="left-[34%] top-[26%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[12deg]" />
+        <Watermark icon={Camera} className="left-[58%] top-[34%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[12deg]" />
+        <Watermark icon={Mic} color="secondary" className="left-[64%] top-[20%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[15deg]" />
+        <Watermark icon={Globe} className="left-[82%] top-[28%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[30deg]" />
+        <Watermark icon={TrendingUp} className="left-[6%] top-[55%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[8deg]" />
+        <Watermark icon={Palette} color="violet" className="left-[26%] top-[48%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-90" />
+        <Watermark icon={MessageCircle} color="secondary" strokeWidth={0.75} className="left-[50%] top-[52%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[18deg]" />
+        <Watermark icon={TrendingUp} color="pink" className="left-[43%] top-[65%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[30deg]" />
+        <Watermark icon={Video} color="cyan" className="left-[74%] top-[46%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[12deg]" />
+        <Watermark icon={Camera} color="violet" className="left-[94%] top-[58%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+        <Watermark icon={Globe} color="accent" className="left-[10%] top-[78%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[6deg]" />
+        <Watermark icon={Music} color="pink" className="left-[33%] top-[74%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[24deg]" />
+        <Watermark icon={Zap} className="left-[56%] top-[80%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[12deg]" />
+        <Watermark icon={PenTool} color="accent" className="left-[88%] top-[76%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[6deg]" />
+        <Watermark icon={Code} className="left-[6%] top-[95%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+        <Watermark icon={Globe} className="left-[28%] top-[94%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[6deg]" />
+        <Watermark icon={Zap} color="accent" className="left-[51%] top-[94%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[12deg]" />
+        <Watermark icon={Briefcase} color="cyan" className="left-[78%] top-[96%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 -rotate-45" />
         <div className="absolute inset-0 pointer-events-none">
-          <div className="hidden md:block absolute top-20 left-10 w-12 h-12 rounded-full bg-primary/20 backdrop-blur-sm flex items-center justify-center animate-float-slow border border-primary/20">
-            <Code className="h-6 w-6 text-primary" />
+          <div className="hidden md:flex absolute top-20 left-10 w-16 h-16 rounded-full bg-primary/50 backdrop-blur-lg items-center justify-center animate-float-slow border border-primary/40 shadow-[0_0_30px_rgba(59,130,246,0.55)]">
+            <Code className="h-8 w-8 text-primary-foreground drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
           </div>
-          <div className="absolute top-16 md:top-32 right-4 md:right-20 w-8 md:w-10 h-8 md:h-10 rounded-full bg-accent/20 backdrop-blur-sm flex items-center justify-center animate-float-delayed border border-accent/20">
-            <Camera className="h-4 md:h-5 w-4 md:w-5 text-accent" />
+          <div className="absolute top-16 md:top-32 right-4 md:right-20 w-12 md:w-14 h-12 md:h-14 rounded-full bg-accent/50 backdrop-blur-lg flex items-center justify-center animate-float-delayed border border-accent/40 shadow-[0_0_30px_rgba(168,85,247,0.55)]">
+            <Camera className="h-6 md:h-7 w-6 md:w-7 text-accent-foreground drop-shadow-[0_0_8px_rgba(168,85,247,0.9)]" />
           </div>
-          <div className="hidden md:block absolute bottom-32 left-20 w-14 h-14 rounded-full bg-secondary/40 backdrop-blur-sm flex items-center justify-center animate-float-reverse border border-secondary-foreground/20">
-            <PenTool className="h-7 w-7 text-secondary-foreground" />
+          <div className="hidden md:flex absolute bottom-32 left-10 w-16 h-16 rounded-full bg-secondary/60 backdrop-blur-lg items-center justify-center animate-float-pen border border-secondary-foreground/30 shadow-[0_0_30px_rgba(100,116,139,0.55)]">
+            <PenTool className="h-8 w-8 text-secondary-foreground drop-shadow-[0_0_8px_rgba(100,116,139,0.9)]" />
           </div>
-          <div className="absolute top-24 md:top-40 right-8 md:right-40 w-6 md:w-8 h-6 md:h-8 rounded-full bg-primary/15 backdrop-blur-sm flex items-center justify-center animate-float-slow border border-primary/20">
-            <Palette className="h-3 md:h-4 w-3 md:w-4 text-primary" />
+          <div className="absolute top-24 md:top-40 right-8 md:right-40 w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/45 backdrop-blur-lg flex items-center justify-center animate-float-slow border border-primary/40 shadow-[0_0_25px_rgba(59,130,246,0.5)]">
+            <Palette className="h-5 md:h-6 w-5 md:w-6 text-primary-foreground drop-shadow-[0_0_6px_rgba(59,130,246,0.9)]" />
           </div>
-          <div className="absolute bottom-20 md:bottom-40 right-6 md:right-16 w-9 md:w-11 h-9 md:h-11 rounded-full bg-accent/15 backdrop-blur-sm flex items-center justify-center animate-float-delayed border border-accent/20">
-            <Video className="h-4 md:h-5 w-4 md:w-5 text-accent" />
+          <div className="absolute bottom-20 md:bottom-40 right-6 md:right-16 w-12 md:w-14 h-12 md:h-14 rounded-full bg-accent/45 backdrop-blur-lg flex items-center justify-center animate-float-delayed border border-accent/40 shadow-[0_0_25px_rgba(168,85,247,0.5)]">
+            <Video className="h-6 md:h-7 w-6 md:w-7 text-accent-foreground drop-shadow-[0_0_6px_rgba(168,85,247,0.9)]" />
           </div>
-          <div className="hidden md:block absolute top-60 left-32 w-9 h-9 rounded-full bg-primary/10 backdrop-blur-sm flex items-center justify-center animate-float-reverse border border-primary/10">
-            <Mic className="h-4 w-4 text-primary" />
+          <div className="hidden md:flex absolute top-60 left-48 w-12 h-12 rounded-full bg-primary/45 backdrop-blur-lg items-center justify-center animate-float-mic border border-primary/40 shadow-[0_0_25px_rgba(59,130,246,0.5)]">
+            <Mic className="h-6 w-6 text-primary-foreground drop-shadow-[0_0_6px_rgba(59,130,246,0.9)]" />
           </div>
         </div>
 
         <div className="container mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-5 md:mb-7 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
             RNSIT Runs on Skills
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-4">
+          <p className="text-lg md:text-xl text-muted-foreground mb-7 md:mb-9 max-w-3xl mx-auto px-4">
             The student-run skill exchange for RNS Institute of Technology — find talented
             RNSITians, offer what you're good at, and team up through campus activities.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 px-4">
             <Button 
               size="lg" 
-              className="plasma-button text-primary-foreground w-full sm:w-auto"
+              className="plasma-button text-primary-foreground w-full sm:w-auto h-14 px-10 text-base"
               onClick={handleFindTalent}
             >
               <Users className="mr-2 h-5 w-5" />
@@ -506,7 +532,7 @@ const Home = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-primary/30 text-foreground hover:bg-primary/10 w-full sm:w-auto"
+              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground w-full sm:w-auto h-14 px-10 text-base"
               onClick={handleBrowseActivities}
             >
               <Calendar className="mr-2 h-5 w-5" />
@@ -515,7 +541,7 @@ const Home = () => {
             <Button
               size="lg"
               variant="outline"
-              className="border-primary/30 text-foreground hover:bg-primary/10 w-full sm:w-auto"
+              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground w-full sm:w-auto h-14 px-10 text-base"
               onClick={() => navigate('/people')}
             >
               <UserIcon className="mr-2 h-5 w-5" />
@@ -526,10 +552,21 @@ const Home = () => {
       </section>
 
       {/* Skills Section */}
-      <section id="skills-section" className="py-8 md:py-12 px-4 relative z-10">
+      <section id="skills-section" className="section-band overflow-hidden relative py-8 md:py-10 px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 space-y-2 sm:space-y-0">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground">Skills and Service</h3>
+          <Watermark icon={Music} className="left-[11%] top-[36%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+          <Watermark icon={Briefcase} className="left-[38%] top-[32%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[12deg]" />
+          <Watermark icon={Camera} className="left-[87%] top-[34%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[30deg]" />
+          <Watermark icon={Globe} className="left-[7%] top-[58%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[8deg]" />
+          <Watermark icon={Zap} className="left-[58%] top-[56%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[18deg]" />
+          <Watermark icon={Camera} className="left-[84%] top-[54%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[30deg]" />
+          <Watermark icon={Code} className="left-[10%] top-[80%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[6deg]" />
+          <Watermark icon={Music} className="left-[36%] top-[80%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[24deg]" />
+          <Watermark icon={Video} className="left-[9%] top-[96%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[6deg]" />
+          <Watermark icon={Palette} className="left-[40%] top-[94%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+          <Watermark icon={Globe} className="left-[91%] top-[93%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 -rotate-[40deg]" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-5 space-y-2 sm:space-y-0">
+            <h3 className="text-xl md:text-2xl font-bold text-foreground">Skills and Service</h3>
             <div className="flex items-center gap-2">
               {user && (
                 <Button 
@@ -544,7 +581,7 @@ const Home = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-primary hover:bg-primary/10"
+                className="text-primary hover:bg-primary/10 hover:text-primary"
                 onClick={handleViewAllSkills}
               >
                 View All →
@@ -552,21 +589,21 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {skillCategories.map((category) => {
               const IconComponent = category.icon;
               const count = categoryCounts[category.name] || 0;
               return (
                 <Card
                   key={category.name}
-                  className="crystal-card group hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-                  onClick={() => handleCategoryClick(category.name)}
+className="crystal-card group transition-colors duration-300 hover:border-primary/30 hover:bg-primary/[0.02] cursor-pointer"
+                    onClick={() => handleCategoryClick(category.name)}
                 >
-                  <CardHeader className="pb-2 md:pb-3 relative z-10">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-all duration-300 shadow-glow">
-                      <IconComponent className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                  <CardHeader className="p-4 md:p-6 relative z-10">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-2.5 md:mb-3 shadow-glow">
+                      <IconComponent className="h-6 w-6 md:h-7 md:w-7 text-primary" />
                     </div>
-                    <CardTitle className="text-base md:text-lg text-foreground">{category.name}</CardTitle>
+                    <CardTitle className="text-base md:text-lg font-semibold text-foreground">{category.name}</CardTitle>
                     <CardDescription className="text-sm text-muted-foreground">
                       {count > 0
                         ? `${count} skill${count === 1 ? '' : 's'} offered`
@@ -580,21 +617,21 @@ const Home = () => {
 
           {/* User-added skills from database */}
           {dbSkills.length > 0 && (
-            <div className="mt-8">
-              <h4 className="text-xl font-semibold mb-4 text-foreground">Recently Added by Students</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-3 text-foreground">Recently Added by Students</h4>
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {dbSkills.slice(0, 4).map((skill) => (
                   <Card
                     key={skill.id}
-                    className="crystal-card group hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+                    className="crystal-card group transition-colors duration-300 hover:border-primary/30 hover:bg-primary/[0.02] cursor-pointer"
                     onClick={() => handleSkillClick(skill.id)}
                   >
                     <CardHeader className="pb-2 md:pb-3 relative z-10">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-accent/30 to-primary/30 flex items-center justify-center mb-2 md:mb-3 shadow-glow">
-                        <Code className="h-5 w-5 md:h-6 md:w-6 text-accent" />
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-accent/30 to-primary/30 flex items-center justify-center mb-1.5 md:mb-2 shadow-glow">
+                        <Code className="h-4 w-4 md:h-5 md:w-5 text-accent" />
                       </div>
-                      <CardTitle className="text-base md:text-lg text-foreground">{skill.title}</CardTitle>
-                      <CardDescription className="text-sm line-clamp-2 text-muted-foreground">
+                      <CardTitle className="text-sm md:text-base text-foreground">{skill.title}</CardTitle>
+                      <CardDescription className="text-xs line-clamp-2 text-muted-foreground">
                         {skill.description}
                       </CardDescription>
                       <Badge className="w-fit mt-2 bg-primary/20 text-primary border-primary/30">
@@ -619,12 +656,30 @@ const Home = () => {
       </section>
 
       {/* Campus Pulse — live stats + top contributors */}
-      <CampusPulse />
+      <section className="py-4 md:py-6 px-4 relative overflow-hidden z-10">
+        <CampusPulse />
+      </section>
 
       {/* Activities Section */}
-      <section id="activities-section" className="py-8 md:py-12 px-4 relative z-10">
+      <section id="activities-section" className="section-band overflow-hidden relative py-8 md:py-12 px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 space-y-2 sm:space-y-0">
+          <Watermark icon={Calendar} className="left-[8%] top-[8%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-[12deg]" />
+          <Watermark icon={Globe} className="left-[38%] top-[12%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[18deg]" />
+          <Watermark icon={Briefcase} className="left-[66%] top-[7%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-6" />
+          <Watermark icon={Camera} className="left-[92%] top-[10%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[24deg]" />
+          <Watermark icon={MessageCircle} className="left-[6%] top-[35%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[8deg]" />
+          <Watermark icon={Music} className="left-[32%] top-[30%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-90" />
+          <Watermark icon={PenTool} className="left-[60%] top-[34%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[30deg]" />
+          <Watermark icon={TrendingUp} className="left-[88%] top-[31%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-[18deg]" />
+          <Watermark icon={Zap} className="left-[12%] top-[62%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[30deg]" />
+          <Watermark icon={Code} className="left-[42%] top-[66%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-45" />
+          <Watermark icon={Briefcase} className="left-[72%] top-[58%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[12deg]" />
+          <Watermark icon={Music} className="left-[96%] top-[66%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-[40deg]" />
+          <Watermark icon={Camera} className="left-[7%] top-[90%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+          <Watermark icon={Video} className="left-[40%] top-[88%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 -rotate-[6deg]" />
+          <Watermark icon={Globe} className="left-[66%] top-[93%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[24deg]" />
+          <Watermark icon={PenTool} className="left-[92%] top-[89%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-6" />
+<div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 space-y-2 sm:space-y-0">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground">Activity and Events</h3>
             <div className="flex items-center gap-2">
               {user && (
@@ -640,7 +695,7 @@ const Home = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-primary hover:bg-primary/10"
+                className="text-primary hover:bg-primary/10 hover:text-primary"
                 onClick={handleExploreAll}
               >
                 Explore All →
@@ -649,33 +704,33 @@ const Home = () => {
           </div>
           
           {dbActivities.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-              {dbActivities.slice(0, 6).map((activity) => (
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
+              {dbActivities.slice(0, 6).map((activity, i) => (
                 <Card
                   key={activity.id}
-                  className="crystal-card group hover:scale-[1.02] transition-all duration-300 cursor-pointer overflow-hidden"
+                  className={`crystal-card group hover:scale-[1.02] transition-all duration-300 cursor-pointer overflow-hidden ${i === 0 ? 'md:col-span-2' : ''}`}
                   onClick={() => handleActivityClick(activity.id)}
                 >
-                  <div className="h-24 relative bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10 flex items-center justify-center">
-                    <Calendar className="h-10 w-10 text-primary/70 group-hover:scale-110 transition-all duration-300" />
-                    <Badge className="absolute top-3 right-3 text-xs bg-accent/20 text-accent border-accent/30">
+                  <div className="h-44 md:h-56 relative bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10 flex items-center justify-center">
+                    <Calendar className="h-16 md:h-20 w-16 md:w-20 text-primary/70 group-hover:scale-110 transition-all duration-300" />
+                    <Badge className="absolute top-3 right-3 text-sm bg-accent/20 text-accent border-accent/30 px-3 py-1">
                       {activity.category}
                     </Badge>
                   </div>
-                  <CardHeader className="relative z-10">
-                    <CardTitle className="text-lg md:text-xl text-foreground">{activity.title}</CardTitle>
-                    <CardDescription className="text-sm line-clamp-2 text-muted-foreground">{activity.description}</CardDescription>
+                  <CardHeader className="relative z-10 pb-3 pt-5">
+                    <CardTitle className="text-xl md:text-2xl mb-1 text-foreground">{activity.title}</CardTitle>
+                    <CardDescription className="text-base md:text-lg line-clamp-2 text-muted-foreground">{activity.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-0 relative z-10">
-                    <div className="space-y-2 text-sm">
+                  <CardContent className="pt-2 pb-5 relative z-10">
+                    <div className="space-y-3 text-base md:text-lg">
                       <p className="text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-primary" /> {activity.date} at {activity.time}
+                        <Calendar className="h-4 w-4 text-primary" /> {activity.date} at {activity.time}
                       </p>
                       <p className="text-muted-foreground flex items-center gap-1">
-                        <Globe className="h-3 w-3 text-accent" /> {activity.venue}
+                        <Globe className="h-4 w-4 text-accent" /> {activity.venue}
                       </p>
                       <p
-                        className="text-xs text-muted-foreground hover:text-primary cursor-pointer"
+                        className="text-sm text-muted-foreground hover:text-primary cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (activity.user_id) navigate(`/user/${activity.user_id}`);
@@ -707,22 +762,19 @@ const Home = () => {
             </Card>
           )}
         </div>
-      </section>
 
-      {/* CTA Section */}
-      {!user && (
-        <section className="py-12 md:py-16 px-4 relative z-10">
-          <div className="container mx-auto text-center">
-            <div className="crystal-card p-8 md:p-12 max-w-2xl mx-auto">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        {!user && (
+          <div className="container mx-auto text-center relative z-10 py-8 md:py-10">
+            <div className="crystal-card p-6 md:p-10 max-w-4xl mx-auto">
+              <h3 className="text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Ready to Connect?
               </h3>
-              <p className="text-muted-foreground mb-6 md:mb-8 max-w-xl mx-auto">
+              <p className="text-muted-foreground mb-5 max-w-2xl mx-auto text-sm md:text-base">
                 Every RNSITian is good at something. Put your skill on the board, find the
                 people you need, and build things together — all inside campus.
               </p>
-              <Button 
-                size="lg" 
+              <Button
+                size="sm"
                 className="plasma-button text-primary-foreground"
                 onClick={handleStartConnecting}
               >
@@ -730,8 +782,11 @@ const Home = () => {
               </Button>
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
+
+      {/* Footer — info & contact */}
+      <Footer />
 
       {/* Modals */}
       <MessagesModal 

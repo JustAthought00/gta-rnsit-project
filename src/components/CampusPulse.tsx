@@ -98,25 +98,25 @@ const CampusPulse = () => {
   ];
 
   return (
-    <section className="py-8 md:py-12 px-4 relative z-10">
+    <section className="py-1 md:py-2 px-4 relative z-10">
       <div className="container mx-auto">
-        <div className="flex items-center gap-2 mb-6 md:mb-8">
-          <Trophy className="h-6 w-6 text-primary" />
-          <h3 className="text-2xl md:text-3xl font-bold text-foreground">Campus Pulse</h3>
+        <div className="flex items-center gap-1.5 mb-1.5 md:mb-2">
+          <Trophy className="h-4 w-4 text-primary" />
+          <h3 className="text-base md:text-lg font-bold text-foreground">Campus Pulse</h3>
           <Badge className="bg-primary/15 text-primary border-primary/30 text-xs">Live</Badge>
         </div>
 
         {/* Real-time stats — straight from the database */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 mb-3">
           {statTiles.map(({ label, value, icon: Icon }) => (
             <Card key={label} className="crystal-card">
-              <CardContent className="py-5 flex items-center gap-4">
+              <CardContent className="py-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center shadow-glow shrink-0">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -127,8 +127,8 @@ const CampusPulse = () => {
         {contributors.length > 0 && (
           <Card className="crystal-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg text-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                <Trophy className="h-3.5 w-3.5 text-primary" />
                 Top Contributors
               </CardTitle>
             </CardHeader>
@@ -137,7 +137,7 @@ const CampusPulse = () => {
                 {contributors.map((c, i) => (
                   <div
                     key={c.userId}
-                    className="flex items-center gap-3 py-3 cursor-pointer hover:bg-primary/5 rounded-lg px-2 transition-colors"
+                    className="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-primary/5 rounded-lg px-2 transition-colors"
                     onClick={() => navigate(`/user/${c.userId}`)}
                   >
                     <span
@@ -149,12 +149,12 @@ const CampusPulse = () => {
                     </span>
                     <Avatar className="h-9 w-9 border border-primary/30">
                       {c.avatarUrl && <AvatarImage src={c.avatarUrl} alt={c.fullName} />}
-                      <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
                         {c.fullName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{c.fullName}</p>
+                      <p className="font-medium text-foreground truncate text-sm">{c.fullName}</p>
                       <p className="text-xs text-muted-foreground">
                         {c.skillCount > 0 && `${c.skillCount} skill${c.skillCount === 1 ? '' : 's'}`}
                         {c.skillCount > 0 && c.activityCount > 0 && ' · '}

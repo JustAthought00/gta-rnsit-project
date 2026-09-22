@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Home as HomeIcon } from "lucide-react";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./components/Home";
@@ -22,14 +22,13 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    setShowSplash(true);
-  }, []);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (sessionStorage.getItem("hasSeenGtaIntro") === "true") return false;
+    return true;
+  });
 
   const handleEnterApp = () => {
-    localStorage.setItem('hasSeenApp', 'true');
+    sessionStorage.setItem("hasSeenGtaIntro", "true");
     setShowSplash(false);
   };
 

@@ -156,7 +156,7 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="text-muted-foreground hover:text-primary hover:bg-primary/10 relative p-2"
+        className="header-glow-btn relative p-2"
         aria-label="Notifications"
       >
         <Bell className="h-4 w-4" />

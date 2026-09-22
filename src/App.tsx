@@ -53,10 +53,12 @@ const MobileNav = () => {
             <Link
               key={path}
               to={path}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2 text-[10px] font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 text-[10px] sm:text-[11px] font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`}
             >
-              <Icon className={`h-5 w-5 ${active ? 'electric-glow' : ''}`} />
-              <span>{label}</span>
+              <span className={`rounded-full px-2.5 py-1 transition-colors ${active ? 'bg-primary/15 electric-glow' : 'bg-transparent'}`}>
+                <Icon className="h-[21px] w-[21px]" />
+              </span>
+              <span className="whitespace-nowrap leading-none">{label}</span>
             </Link>
           );
         })}

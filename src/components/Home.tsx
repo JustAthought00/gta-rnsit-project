@@ -762,7 +762,7 @@ const Home = () => {
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-5 md:mb-7 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
             RNSIT Runs on Skills
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground mb-7 md:mb-9 max-w-3xl mx-auto px-4">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-9 max-w-3xl mx-auto px-4">
             The student-run skill exchange for RNS Institute of Technology — find talented
             RNSITians, offer what you're good at, and team up through campus activities.
           </p>
@@ -868,7 +868,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollSkillsRow('left')}
                     aria-label="Scroll featured left"
                   >
@@ -877,7 +877,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollSkillsRow('right')}
                     aria-label="Scroll featured right"
                   >
@@ -983,7 +983,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollActivitiesRow('left')}
                     aria-label="Scroll activities left"
                   >
@@ -992,7 +992,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollActivitiesRow('right')}
                     aria-label="Scroll activities right"
                   >

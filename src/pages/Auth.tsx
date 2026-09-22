@@ -274,7 +274,7 @@ const Auth = () => {
                 if (viewMode !== 'main') setViewMode('main');
                 else navigate('/');
               }}
-              className="p-2 text-foreground/70 hover:text-foreground hover:bg-primary/10"
+              className="min-h-10 p-2 text-foreground/70 hover:text-foreground hover:bg-primary/10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               {viewMode !== 'main' ? 'Back to Auth' : 'Back'}
@@ -405,8 +405,8 @@ const Auth = () => {
             <div className="space-y-4">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-                  <TabsTrigger value="signin" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Sign Up</TabsTrigger>
+                  <TabsTrigger value="signin" className="h-10 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup" className="h-10 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Sign Up</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="signin" className="space-y-4 mt-4">

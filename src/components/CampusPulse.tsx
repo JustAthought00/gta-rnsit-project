@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Zap, Calendar, Users, Star } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ interface Contributor {
   userId: string;
   fullName: string;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   skillCount: number;
   activityCount: number;
   total: number;
@@ -30,17 +31,36 @@ const CampusPulse = () => {
 
   useEffect(() => {
     const fetchPulse = async () => {
-      const [profilesRes, skillsRes, activitiesRes, reviewsRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, full_name, avatar_url'),
+      const [skillsRes, activitiesRes, reviewsRes] = await Promise.all([
         supabase.from('skills').select('user_id'),
-        supabase.from('activities').select('user_id'),
+        supabase.from('activities').select('user_id, approval_status, deadline'),
         supabase.from('reviews').select('id'),
       ]);
 
-      const profiles = profilesRes.data || [];
+      // banner_url only exists once the profile_banners migration is applied; if the
+      // query fails (column missing on the live DB) retry without it.
+      let profiles: { user_id: string; full_name: string; avatar_url: string | null; banner_url?: string | null }[] = [];
+      const { data: profilesWithBanner, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url, banner_url');
+      if (!error) {
+        profiles = profilesWithBanner || [];
+      } else {
+        const { data: fallback } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url');
+        profiles = fallback || [];
+      }
       const skills = skillsRes.data || [];
-      const activities = activitiesRes.data || [];
+      const allActivities = activitiesRes.data || [];
       const reviews = reviewsRes.data || [];
+
+      // Only count approved activities that haven't passed their deadline
+      const now = Date.now();
+      const activities = allActivities.filter(a =>
+        (a.approval_status === null || a.approval_status === 'approved') &&
+        (!a.deadline || new Date(a.deadline).getTime() > now)
+      );
 
       setStats({
         students: profiles.length,
@@ -68,6 +88,7 @@ const CampusPulse = () => {
           userId,
           fullName: profileMap.get(userId)?.full_name || 'Anonymous',
           avatarUrl: profileMap.get(userId)?.avatar_url || null,
+          bannerUrl: profileMap.get(userId)?.banner_url || null,
           skillCount: c.skillCount,
           activityCount: c.activityCount,
           total: c.skillCount + c.activityCount,
@@ -103,7 +124,7 @@ const CampusPulse = () => {
         <div className="flex items-center gap-1.5 mb-1.5 md:mb-2">
           <Trophy className="h-4 w-4 text-primary" />
           <h3 className="text-base md:text-lg font-bold text-foreground">Campus Pulse</h3>
-          <Badge className="bg-primary/15 text-primary border-primary/30 text-xs">Live</Badge>
+          <Badge className="bg-primary/15 text-primary border-primary/30 text-xs hover:bg-primary/15 hover:text-primary">Live</Badge>
         </div>
 
         {/* Real-time stats — straight from the database */}
@@ -125,21 +146,30 @@ const CampusPulse = () => {
 
         {/* Top contributors leaderboard */}
         {contributors.length > 0 && (
-          <Card className="crystal-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-foreground flex items-center gap-2">
-                <Trophy className="h-3.5 w-3.5 text-primary" />
-                Top Contributors
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y divide-border/50">
-                {contributors.map((c, i) => (
-                  <div
-                    key={c.userId}
-                    className="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-primary/5 rounded-lg px-2 transition-colors"
-                    onClick={() => navigate(`/user/${c.userId}`)}
-                  >
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              <h4 className="text-sm font-semibold text-foreground">Top Contributors</h4>
+            </div>
+            <div className="max-h-[340px] overflow-y-auto pr-2 space-y-2 [scrollbar-width:thin]">
+              {contributors.map((c, i) => (
+                <Card
+                  key={c.userId}
+                  className="crystal-card cursor-pointer relative overflow-hidden w-full shrink-0"
+                  onClick={() => navigate(`/user/${c.userId}`)}
+                >
+                  {c.bannerUrl && (
+                    <div className="absolute inset-y-0 right-0 w-2/3 overflow-hidden" aria-hidden>
+                      <img
+                        src={c.bannerUrl}
+                        alt=""
+                        className="w-full h-full object-cover object-center pointer-events-none"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-l from-background/10 via-background/40 to-background" />
+                    </div>
+                  )}
+                  <CardContent className="relative z-10 p-3 flex items-center gap-3">
                     <span
                       className={`w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 ${
                         rankStyles[i] || 'bg-primary/10 text-primary border-primary/30'
@@ -147,7 +177,7 @@ const CampusPulse = () => {
                     >
                       {i + 1}
                     </span>
-                    <Avatar className="h-9 w-9 border border-primary/30">
+                    <Avatar className="h-10 w-10 border border-primary/30 shrink-0">
                       {c.avatarUrl && <AvatarImage src={c.avatarUrl} alt={c.fullName} />}
                       <AvatarFallback className="bg-primary/20 text-primary text-xs">
                         {c.fullName.charAt(0)}
@@ -161,14 +191,14 @@ const CampusPulse = () => {
                         {c.activityCount > 0 && `${c.activityCount} event${c.activityCount === 1 ? '' : 's'}`}
                       </p>
                     </div>
-                    <Badge className="bg-primary/15 text-primary border-primary/30 shrink-0">
+                    <Badge className="bg-primary/15 text-primary border-primary/30 shrink-0 hover:bg-primary/15 hover:text-primary">
                       {c.total} contribution{c.total === 1 ? '' : 's'}
                     </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </section>

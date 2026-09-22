@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -58,19 +59,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Holographic palette additions
+        // Cosmic nebula palette additions (aligned with index.css design tokens)
         nebula: {
-          purple: "hsl(280 70% 40%)",
-          teal: "hsl(185 60% 35%)",
-          magenta: "hsl(320 70% 45%)",
+          blue: "hsl(var(--primary))",
+          teal: "hsl(var(--accent))",
+          violet: "hsl(260 70% 55%)",
         },
         plasma: {
-          DEFAULT: "hsl(280 85% 65%)",
-          glow: "hsl(280 85% 75%)",
+          DEFAULT: "hsl(var(--primary))",
+          glow: "hsl(var(--accent))",
         },
         crystal: {
-          DEFAULT: "hsl(250 30% 15%)",
-          light: "hsl(250 30% 25%)",
+          DEFAULT: "hsl(var(--card))",
+          light: "hsl(var(--popover))",
         },
       },
       borderRadius: {
@@ -113,11 +114,11 @@ export default {
         xs: "2px",
       },
       boxShadow: {
-        glow: "0 0 60px hsl(280 85% 65% / 0.3), 0 0 120px hsl(320 80% 55% / 0.15)",
-        crystal: "0 8px 32px hsl(280 60% 30% / 0.3), 0 0 1px hsl(0 0% 100% / 0.1)",
-        plasma: "0 0 40px hsl(280 85% 65% / 0.5), 0 0 80px hsl(320 80% 55% / 0.3)",
+        glow: "var(--shadow-glow)",
+        crystal: "var(--shadow-crystal)",
+        plasma: "var(--shadow-plasma)",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

@@ -9,7 +9,7 @@ const columns: { title: string; links: { label: string; to?: string }[] }[] = [
       { label: 'Find Talent', to: '/skills' },
       { label: 'Browse Activities', to: '/activities' },
       { label: 'Meet People', to: '/people' },
-      { label: 'Campus Pulse', to: '#pulse' },
+      { label: 'Campus Pulse', to: '#campus-pulse' },
     ],
   },
   {

@@ -55,7 +55,7 @@ interface UserSearchResult {
 interface MessagesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUser: any;
+  currentUser: { id: string; fullName: string } | null;
 }
 
 const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => {
@@ -260,11 +260,12 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
   const loadCommunities = async () => {
     if (!currentUser) return;
 
-    // Get communities the user is a member of
+    // Get communities the user is an accepted member of
     const { data: memberships } = await supabase
       .from('community_members')
       .select('community_id')
-      .eq('user_id', currentUser.id);
+      .eq('user_id', currentUser.id)
+      .eq('status', 'accepted');
 
     if (!memberships || memberships.length === 0) {
       setCommunities([]);
@@ -328,28 +329,31 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     }
   };
 
-  const ensureConnectionExists = async (otherUserId: string) => {
+  const getConnectionStatus = async (otherUserId: string): Promise<string> => {
     const { data: existingConn } = await supabase
       .from('connections')
-      .select('*')
+      .select('status, sender_id, receiver_id')
       .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`)
       .maybeSingle();
-      
-    if (!existingConn) {
-      await supabase.from('connections').insert({
-        sender_id: currentUser.id,
-        receiver_id: otherUserId,
-        status: 'pending'
-      });
-    }
+
+    if (!existingConn) return 'none';
+    if (existingConn.status === 'accepted') return 'accepted';
+    if (existingConn.status === 'rejected') return 'rejected';
+    // For pending requests, the receiver can reply to the person who reached out.
+    return existingConn.sender_id === otherUserId ? 'accepted' : 'pending';
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUser) return;
 
     if ((activeTab === 'direct' || activeTab === 'requests') && selectedConversation) {
-      await ensureConnectionExists(selectedConversation);
-      
+      const status = await getConnectionStatus(selectedConversation);
+
+      if (status !== 'accepted') {
+        toast.error("This person hasn't accepted your connection request yet.");
+        return;
+      }
+
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -385,27 +389,26 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
   };
 
   const startNewConversation = async (user: UserSearchResult) => {
-    await ensureConnectionExists(user.user_id);
-    // Send an initial greeting message
-    const { error } = await supabase
-      .from('messages')
-      .insert({
+    const status = await getConnectionStatus(user.user_id);
+
+    if (status === 'none') {
+      // Send a connection request instead of a message; the chat opens only
+      // once the other person accepts.
+      await supabase.from('connections').insert({
         sender_id: currentUser.id,
         receiver_id: user.user_id,
-        content: `👋 Hi ${user.full_name.split(' ')[0]}!`
+        status: 'pending'
       });
-
-    if (error) {
-      toast.error('Failed to start conversation');
-      return;
     }
 
-    toast.success(`Started conversation with ${user.full_name}`);
+    toast.success(`Connection request sent to ${user.full_name}. You can chat once they accept.`);
     setShowNewConversation(false);
     setUserSearchTerm('');
     setSearchResults([]);
-    setSelectedConversation(user.user_id);
-    loadMessages(user.user_id);
+    if (status === 'accepted') {
+      setSelectedConversation(user.user_id);
+      loadMessages(user.user_id);
+    }
     loadConversations();
   };
 
@@ -904,6 +907,12 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                       Accept
                     </Button>
                   </div>
+                </div>
+              ) : selectedConversation && currentConversation?.connection_status === 'pending' ? (
+                <div className="p-4 border-t border-border bg-background flex flex-col items-center justify-center gap-2">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Waiting for {currentConversation.other_user_name} to accept your connection request.
+                  </p>
                 </div>
               ) : (
                 <div className="p-3 md:p-4 border-t border-border bg-background">

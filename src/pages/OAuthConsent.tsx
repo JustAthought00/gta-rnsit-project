@@ -9,7 +9,7 @@ import NebulaBackground from "@/components/NebulaBackground";
 export default function OAuthConsent() {
   const [params] = useSearchParams();
   const authorizationId = params.get("authorization_id") ?? "";
-  const [details, setDetails] = useState<any>(null);
+  const [details, setDetails] = useState<Awaited<ReturnType<typeof supabase.auth.oauth.getAuthorizationDetails>>["data"]>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 

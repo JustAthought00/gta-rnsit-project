@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import NebulaBackground from './NebulaBackground';
 import MessagesModal from './MessagesModal';
 import AddSkillModal from './AddSkillModal';
+import type { Tables } from '@/integrations/supabase/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,20 +27,23 @@ import {
 const SkillDetail = () => {
   const { skillId } = useParams();
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; fullName: string } | null>(null);
   const [showMessagesModal, setShowMessagesModal] = useState(false);
-  const [dbSkill, setDbSkill] = useState<any>(null);
+  const [dbSkill, setDbSkill] = useState<(Tables<'skills'> & { owner: Tables<'profiles'> | null }) | null>(null);
   const [loading, setLoading] = useState(true);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<(Tables<'reviews'> & { profile: Partial<Tables<'profiles'>> | null })[]>([]);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editingRating, setEditingRating] = useState(5);
+  const [editingComment, setEditingComment] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [myRequest, setMyRequest] = useState<any>(null);
-  const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+  const [myRequest, setMyRequest] = useState<Tables<'skill_requests'> | null>(null);
+  const [incomingRequests, setIncomingRequests] = useState<(Tables<'skill_requests'> & { requester?: Partial<Tables<'profiles'>> })[]>([]);
   const [requestMessage, setRequestMessage] = useState('');
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [submittingRequest, setSubmittingRequest] = useState(false);
@@ -167,6 +171,45 @@ const SkillDetail = () => {
       loadReviews(skillId);
     }
     setSubmittingReview(false);
+  };
+
+  const startEditingReview = (review: { id: string; rating: number; comment: string | null }) => {
+    setEditingReviewId(review.id);
+    setEditingRating(review.rating);
+    setEditingComment(review.comment || '');
+  };
+
+  const saveReview = async (reviewId: string) => {
+    if (!currentUser || !skillId) return;
+    setSubmittingReview(true);
+    const { error } = await supabase
+      .from('reviews')
+      .update({ rating: editingRating, comment: editingComment.trim() || null })
+      .eq('id', reviewId)
+      .eq('user_id', currentUser.id);
+    if (error) {
+      toast.error('Failed to update review: ' + error.message);
+    } else {
+      toast.success('Review updated!');
+      setEditingReviewId(null);
+      loadReviews(skillId);
+    }
+    setSubmittingReview(false);
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    if (!currentUser) return;
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId)
+      .eq('user_id', currentUser.id);
+    if (error) {
+      toast.error('Failed to delete review: ' + error.message);
+    } else {
+      toast.success('Review deleted');
+      loadReviews(skillId);
+    }
   };
 
   useEffect(() => {
@@ -359,7 +402,11 @@ const SkillDetail = () => {
                   >
                     {dbSkill.owner.full_name}
                   </p>
-                  <p className="text-sm text-muted-foreground">{dbSkill.owner.department} • {dbSkill.owner.academic_year}</p>
+                  {(dbSkill.owner.department || dbSkill.owner.academic_year) && (
+                    <p className="text-sm text-muted-foreground">
+                      {[dbSkill.owner.department, dbSkill.owner.academic_year].filter(Boolean).join(' • ')}
+                    </p>
+                  )}
                   {dbSkill.experience && <Badge variant="outline" className="mt-1 text-xs border-border">{dbSkill.experience}</Badge>}
                 </div>
                 <div className="flex gap-2">
@@ -506,7 +553,7 @@ const SkillDetail = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Write review */}
-              {currentUser && currentUser.id !== dbSkill.user_id && (
+              {currentUser && currentUser.id !== dbSkill.user_id && !reviews.some(r => r.user_id === currentUser.id) && (
                 <div className="p-4 bg-muted/30 rounded-lg space-y-3">
                   <p className="text-sm font-medium text-foreground">Leave a review</p>
                   <div className="flex gap-1">
@@ -533,23 +580,71 @@ const SkillDetail = () => {
                 <p className="text-muted-foreground text-sm text-center py-4">No reviews yet. Be the first!</p>
               ) : (
                 reviews.map(review => (
-                  <div key={review.id} className="flex gap-3 p-3 rounded-lg bg-muted/20">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={review.profile?.avatar_url} />
-                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                        {review.profile?.full_name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">{review.profile?.full_name || 'Anonymous'}</span>
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map(s => (
-                            <Star key={s} className={`h-3 w-3 ${s <= review.rating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
-                          ))}
+                  <div key={review.id} className="p-3 rounded-lg bg-muted/20">
+                    <div className="flex gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={review.profile?.avatar_url} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                          {review.profile?.full_name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">{review.profile?.full_name || 'Anonymous'}</span>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} className={`h-3 w-3 ${s <= review.rating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                            ))}
+                          </div>
+                          {currentUser && review.user_id === currentUser.id && editingReviewId !== review.id && (
+                            <div className="ml-auto flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-muted-foreground hover:text-primary"
+                                onClick={() => startEditingReview(review)}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-muted-foreground hover:text-destructive"
+                                onClick={() => deleteReview(review.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
+                        {editingReviewId === review.id ? (
+                          <div className="mt-2 space-y-2">
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} onClick={() => setEditingRating(star)}>
+                                  <Star className={`h-5 w-5 ${star <= editingRating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                                </button>
+                              ))}
+                            </div>
+                            <Textarea
+                              value={editingComment}
+                              onChange={(e) => setEditingComment(e.target.value)}
+                              placeholder="Edit your review..."
+                              className="bg-background border-border text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" disabled={submittingReview} onClick={() => saveReview(review.id)} className="plasma-button text-primary-foreground">
+                                {submittingReview ? 'Saving...' : 'Save'}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => setEditingReviewId(null)}>
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          review.comment && <p className="text-sm text-muted-foreground mt-1">{review.comment}</p>
+                        )}
                       </div>
-                      {review.comment && <p className="text-sm text-muted-foreground mt-1">{review.comment}</p>}
                     </div>
                   </div>
                 ))

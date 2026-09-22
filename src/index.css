@@ -4,6 +4,22 @@
 
 /* Dual Theme Design System: Light = Clean Minimal, Dark = Holographic Dreamscape */
 
+@layer utilities {
+  /* Hide scrollbars while keeping the region scrollable (used by horizontal carousels) */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 3D perspective helper used by the splash intro letters */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+}
+
 @layer base {
   :root {
     /* Light Mode - Clean, Minimal Apple-inspired */
@@ -211,6 +227,28 @@
     right: 20%;
     animation-duration: 28s;
     animation-delay: -15s;
+  }
+
+  /* Section glow blobs - reusable aurora orbs for content bands */
+  .glow-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+    pointer-events: none;
+    animation: nebulaFloat 18s ease-in-out infinite;
+  }
+
+  .glow-blob-cyan {
+    background: var(--orb-2);
+  }
+
+  .glow-blob-violet {
+    background: var(--orb-3);
+  }
+
+  .glow-blob-pink {
+    background: var(--orb-4);
   }
 
   /* Crystalline Cards - Different styles for light/dark */
@@ -522,11 +560,6 @@
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0;
     transform: translateY(20px);
-  }
-
-  /* Shadow glow utility */
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
   }
 
   /* Clear row-by-row section division over the nebula backdrop */

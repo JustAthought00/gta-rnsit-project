@@ -44,9 +44,14 @@ export type Database = {
           category: string
           created_at: string
           date: string | null
+          deadline: string | null
           description: string | null
+          group_name: string | null
           id: string
+          approval_status: string
           max_participants: number | null
+          organizer_type: string
+          photo_url: string | null
           requirements: string | null
           time: string | null
           title: string
@@ -58,9 +63,14 @@ export type Database = {
           category: string
           created_at?: string
           date?: string | null
+          deadline?: string | null
           description?: string | null
+          group_name?: string | null
           id?: string
+          approval_status?: string
           max_participants?: number | null
+          organizer_type?: string
+          photo_url?: string | null
           requirements?: string | null
           time?: string | null
           title: string
@@ -72,9 +82,14 @@ export type Database = {
           category?: string
           created_at?: string
           date?: string | null
+          deadline?: string | null
           description?: string | null
+          group_name?: string | null
           id?: string
+          approval_status?: string
           max_participants?: number | null
+          organizer_type?: string
+          photo_url?: string | null
           requirements?: string | null
           time?: string | null
           title?: string
@@ -144,8 +159,11 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          leader_id: string | null
           name: string
+          president_id: string | null
           skill_id: string | null
+          vice_president_id: string | null
         }
         Insert: {
           activity_id?: string | null
@@ -153,8 +171,11 @@ export type Database = {
           created_by: string
           description?: string | null
           id?: string
+          leader_id?: string | null
           name: string
+          president_id?: string | null
           skill_id?: string | null
+          vice_president_id?: string | null
         }
         Update: {
           activity_id?: string | null
@@ -162,8 +183,11 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          leader_id?: string | null
           name?: string
+          president_id?: string | null
           skill_id?: string | null
+          vice_president_id?: string | null
         }
         Relationships: []
       }
@@ -172,18 +196,21 @@ export type Database = {
           community_id: string
           id: string
           joined_at: string
+          status: string
           user_id: string
         }
         Insert: {
           community_id: string
           id?: string
           joined_at?: string
+          status?: string
           user_id: string
         }
         Update: {
           community_id?: string
           id?: string
           joined_at?: string
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -209,6 +236,30 @@ export type Database = {
           created_at?: string
           id?: string
           sender_id?: string
+        }
+        Relationships: []
+      }
+      connections: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -243,6 +294,7 @@ export type Database = {
         Row: {
           academic_year: string | null
           avatar_url: string | null
+          banner_url: string | null
           bio: string | null
           created_at: string
           department: string | null
@@ -252,12 +304,14 @@ export type Database = {
           id: string
           linkedin_url: string | null
           portfolio_url: string | null
+          role: string
           updated_at: string
           user_id: string
         }
         Insert: {
           academic_year?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string
           department?: string | null
@@ -267,12 +321,14 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           portfolio_url?: string | null
+          role?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           academic_year?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string
           department?: string | null
@@ -282,7 +338,79 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           portfolio_url?: string | null
+          role?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      project_collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          inviter_id: string
+          project_id: string
+          responded_at: string | null
+          skill: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inviter_id: string
+          project_id: string
+          responded_at?: string | null
+          skill?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inviter_id?: string
+          project_id?: string
+          responded_at?: string | null
+          skill?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collaborators_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          github_link: string | null
+          id: string
+          team_members: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          github_link?: string | null
+          id?: string
+          team_members?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          github_link?: string | null
+          id?: string
+          team_members?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: []
@@ -357,6 +485,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teachers: {
+        Row: {
+          cabin_location: string | null
+          created_at: string
+          department: string | null
+          designation: string | null
+          email: string
+          experience: string | null
+          expertise: string | null
+          full_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cabin_location?: string | null
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          email: string
+          experience?: string | null
+          expertise?: string | null
+          full_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cabin_location?: string | null
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          email?: string
+          experience?: string | null
+          expertise?: string | null
+          full_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       skills: {
         Row: {

@@ -1,15 +1,18 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, MapPin, Clock, Crown, MessageCircle, Pencil, Trash2, UserCheck, UserMinus } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, MapPin, Clock, Crown, MessageCircle, Pencil, Trash2, UserCheck, UserMinus, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import MessagesModal from './MessagesModal';
 import NebulaBackground from './NebulaBackground';
 import AddActivityModal from './AddActivityModal';
+import type { Tables } from '@/integrations/supabase/types';
+import type { User } from '@supabase/supabase-js';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,14 +29,22 @@ const ActivityDetail = () => {
   const navigate = useNavigate();
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [showMessagesModal, setShowMessagesModal] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [dbActivity, setDbActivity] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [dbActivity, setDbActivity] = useState<(Tables<'activities'> & { profiles: { full_name: string | null; department: string | null; academic_year: string | null } | null }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
   const [joining, setJoining] = useState(false);
+
+  const [reviews, setReviews] = useState<(Tables<'reviews'> & { profile: Partial<Tables<'profiles'>> | null })[]>([]);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState('');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editingRating, setEditingRating] = useState(5);
+  const [editingComment, setEditingComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Check auth and fetch activity
   useEffect(() => {
@@ -77,10 +88,97 @@ const ActivityDetail = () => {
           .eq('user_id', data.user_id)
           .maybeSingle();
         setDbActivity({ ...data, profiles: ownerProfile });
+        loadReviews(data.id);
       }
     }
     setLoading(false);
   };
+
+  const loadReviews = async (targetId: string) => {
+    const { data } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('target_id', targetId)
+      .eq('target_type', 'activity')
+      .order('created_at', { ascending: false });
+
+    if (data && data.length > 0) {
+      const userIds = [...new Set(data.map(r => r.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+      const profileMap = new Map(profilesData?.map(p => [p.user_id, p]));
+      setReviews(data.map(r => ({ ...r, profile: profileMap.get(r.user_id) })));
+    } else {
+      setReviews([]);
+    }
+  };
+
+  const submitReview = async () => {
+    if (!user || !activityId) {
+      toast.error('Please sign in to leave a review');
+      return;
+    }
+    setSubmittingReview(true);
+    const { error } = await supabase.from('reviews').insert({
+      user_id: user.id,
+      target_id: activityId,
+      target_type: 'activity',
+      rating: newRating,
+      comment: newComment.trim() || null,
+    });
+    if (error) {
+      toast.error(error.message.includes('duplicate') ? 'You already reviewed this activity' : 'Failed to submit review');
+    } else {
+      toast.success('Review submitted!');
+      setNewComment('');
+      setNewRating(5);
+      loadReviews(activityId);
+    }
+    setSubmittingReview(false);
+  };
+
+  const startEditingReview = (review: { id: string; rating: number; comment: string | null }) => {
+    setEditingReviewId(review.id);
+    setEditingRating(review.rating);
+    setEditingComment(review.comment || '');
+  };
+
+  const saveReview = async (reviewId: string) => {
+    if (!user || !activityId) return;
+    setSubmittingReview(true);
+    const { error } = await supabase
+      .from('reviews')
+      .update({ rating: editingRating, comment: editingComment.trim() || null })
+      .eq('id', reviewId)
+      .eq('user_id', user.id);
+    if (error) {
+      toast.error('Failed to update review: ' + error.message);
+    } else {
+      toast.success('Review updated!');
+      setEditingReviewId(null);
+      loadReviews(activityId);
+    }
+    setSubmittingReview(false);
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId)
+      .eq('user_id', user.id);
+    if (error) {
+      toast.error('Failed to delete review: ' + error.message);
+    } else {
+      toast.success('Review deleted');
+      loadReviews(activityId);
+    }
+  };
+
+  const activityExpired = dbActivity?.deadline ? new Date(dbActivity.deadline).getTime() < Date.now() : false;
 
   const handleMessageOrganizer = () => {
     if (!user) {
@@ -155,6 +253,10 @@ const ActivityDetail = () => {
     time: dbActivity.time,
     venue: dbActivity.venue,
     requirements: dbActivity.requirements,
+    organizer_type: dbActivity.organizer_type,
+    group_name: dbActivity.group_name,
+    deadline: dbActivity.deadline,
+    approval_status: dbActivity.approval_status,
   } : null;
 
   if (loading) {
@@ -239,8 +341,16 @@ const ActivityDetail = () => {
 
       {/* Hero Section */}
       <section className="relative z-10">
-        <div className="h-48 relative bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10 flex items-center justify-center">
-          <Calendar className="h-16 w-16 text-primary/60" />
+        <div className={`h-48 relative flex items-center justify-center ${dbActivity?.photo_url ? '' : 'bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10'}`}>
+          {dbActivity?.photo_url ? (
+            <img
+              src={dbActivity.photo_url}
+              alt={dbActivity.title || 'Activity'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Calendar className="h-16 w-16 text-primary/60" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
         <div className="absolute bottom-4 left-4 text-foreground">
@@ -248,6 +358,16 @@ const ActivityDetail = () => {
             {activity.category && (
               <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
                 <Badge className="bg-accent/20 text-accent border-accent/30">{activity.category}</Badge>
+              </div>
+            )}
+            {activity.approval_status === 'pending' && (
+              <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Pending Approval</Badge>
+              </div>
+            )}
+            {activityExpired && (
+              <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                <Badge className="bg-muted text-muted-foreground border-border">Registration Closed</Badge>
               </div>
             )}
             {activity.maxParticipants && (
@@ -276,7 +396,7 @@ const ActivityDetail = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {activity.owner && (
+                  {activity.organizer_type !== 'group' && activity.owner && (
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 border-2 border-primary/30">
                         <AvatarFallback className="bg-primary/20 text-primary">
@@ -285,7 +405,24 @@ const ActivityDetail = () => {
                       </Avatar>
                       <div>
                         <p className="font-medium text-foreground">Organized by {activity.owner.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{activity.owner.department} • {activity.owner.academic_year}</p>
+                        {(activity.owner.department || activity.owner.academic_year) && (
+                            <p className="text-sm text-muted-foreground">
+                              {[activity.owner.department, activity.owner.academic_year].filter(Boolean).join(' • ')}
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                  )}
+                  {activity.organizer_type === 'group' && (
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-accent/30">
+                        <AvatarFallback className="bg-accent/20 text-accent">
+                          <Users className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground">Hosted by {activity.group_name || 'a campus club'}</p>
+                        <p className="text-sm text-muted-foreground">Club / Group</p>
                       </div>
                     </div>
                   )}
@@ -299,6 +436,12 @@ const ActivityDetail = () => {
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="h-4 w-4 text-accent" />
                       <span>{activity.time}</span>
+                    </div>
+                  )}
+                  {activity.deadline && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <span>Registration closes {new Date(activity.deadline).toLocaleString()}</span>
                     </div>
                   )}
                   {activity.venue && (
@@ -317,31 +460,40 @@ const ActivityDetail = () => {
                 )}
                 {user?.id !== activity.ownerUserId && (
                   <div className="pt-4 border-t border-border/50 flex flex-wrap gap-3">
-                    <Button
-                      variant={isJoined ? 'outline' : 'default'}
-                      className={isJoined ? 'border-primary/40' : 'plasma-button text-primary-foreground'}
-                      onClick={toggleJoin}
-                      disabled={joining || (!isJoined && isFull && isSignedIn)}
-                    >
-                      {isJoined ? <UserMinus className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
-                      {!isSignedIn
-                        ? 'Sign In to Join'
-                        : joining
-                          ? 'Please wait...'
-                          : isJoined
-                            ? 'Leave Activity'
-                            : isFull
-                              ? 'Activity Full'
-                              : 'Join Activity'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="border-primary/40"
-                      onClick={handleMessageOrganizer}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      {isSignedIn ? 'Message the Organizer' : 'Sign In to Message the Organizer'}
-                    </Button>
+                    {(activityExpired || activity.approval_status === 'pending') ? (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        {activityExpired ? 'Registration is closed for this event.' : 'This event is awaiting approval and will open for registration soon.'}
+                      </p>
+                    ) : (
+                      <Button
+                        variant={isJoined ? 'outline' : 'default'}
+                        className={isJoined ? 'border-primary/40' : 'plasma-button text-primary-foreground'}
+                        onClick={toggleJoin}
+                        disabled={joining || (!isJoined && isFull && isSignedIn)}
+                      >
+                        {isJoined ? <UserMinus className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
+                        {!isSignedIn
+                          ? 'Sign In to Join'
+                          : joining
+                            ? 'Please wait...'
+                            : isJoined
+                              ? 'Leave Activity'
+                              : isFull
+                                ? 'Activity Full'
+                                : 'Join Activity'}
+                      </Button>
+                    )}
+                    {activity.approval_status !== 'pending' && (
+                      <Button
+                        variant="outline"
+                        className="border-primary/40"
+                        onClick={handleMessageOrganizer}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        {isSignedIn ? 'Message the Organizer' : 'Sign In to Message the Organizer'}
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -349,6 +501,105 @@ const ActivityDetail = () => {
           </div>
         </section>
       )}
+
+      {/* Reviews */}
+      <section className="pb-8 px-4 relative z-10">
+        <div className="container mx-auto">
+          <Card className="crystal-card">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Star className="h-5 w-5 text-accent" />
+                Reviews {reviews.length > 0 && `(${(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)} avg)`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {user && user.id !== activity.ownerUserId && !reviews.some(r => r.user_id === user.id) && (
+                <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+                  <p className="text-sm font-medium text-foreground">Leave a review</p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button key={star} onClick={() => setNewRating(star)} type="button">
+                        <Star className={`h-5 w-5 ${star <= newRating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Write your review..."
+                    className="bg-background border-border"
+                  />
+                  <Button onClick={submitReview} disabled={submittingReview} size="sm" className="plasma-button text-primary-foreground">
+                    {submittingReview ? 'Submitting...' : 'Submit Review'}
+                  </Button>
+                </div>
+              )}
+
+              {reviews.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-4">No reviews yet. Be the first!</p>
+              ) : (
+                reviews.map(review => (
+                  <div key={review.id} className="p-3 rounded-lg bg-muted/20">
+                    <div className="flex gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={review.profile?.avatar_url} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                          {review.profile?.full_name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">{review.profile?.full_name || 'Anonymous'}</span>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} className={`h-3 w-3 ${s <= review.rating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                            ))}
+                          </div>
+                          {user && review.user_id === user.id && editingReviewId !== review.id && (
+                            <div className="ml-auto flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-6 px-2 text-muted-foreground hover:text-primary" onClick={() => startEditingReview(review)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-6 px-2 text-muted-foreground hover:text-destructive" onClick={() => deleteReview(review.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        {editingReviewId === review.id ? (
+                          <div className="mt-2 space-y-2">
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} onClick={() => setEditingRating(star)} type="button">
+                                  <Star className={`h-5 w-5 ${star <= editingRating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                                </button>
+                              ))}
+                            </div>
+                            <Textarea
+                              value={editingComment}
+                              onChange={(e) => setEditingComment(e.target.value)}
+                              placeholder="Edit your review..."
+                              className="bg-background border-border text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" disabled={submittingReview} onClick={() => saveReview(review.id)} className="plasma-button text-primary-foreground">
+                                {submittingReview ? 'Saving...' : 'Save'}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => setEditingReviewId(null)}>Cancel</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          review.comment && <p className="text-sm text-muted-foreground mt-1">{review.comment}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       {/* Messages Modal */}
       <MessagesModal
@@ -372,6 +623,9 @@ const ActivityDetail = () => {
             venue: dbActivity.venue,
             max_participants: dbActivity.max_participants,
             requirements: dbActivity.requirements,
+            organizer_type: dbActivity.organizer_type,
+            group_name: dbActivity.group_name,
+            photo_url: dbActivity.photo_url,
           }}
         />
       )}

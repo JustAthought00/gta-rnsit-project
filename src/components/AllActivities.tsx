@@ -1,15 +1,17 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Globe, Code, BookOpen, Palette, Dumbbell, Coffee, Briefcase } from 'lucide-react';
+import { ArrowLeft, Calendar, Globe, Code, BookOpen, Palette, Dumbbell, Coffee, Briefcase, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import NebulaBackground from './NebulaBackground';
+import type { Tables } from '@/integrations/supabase/types';
 
 // Must match the category options in AddActivityModal
-const categoryIcons: Record<string, any> = {
+const categoryIcons: Record<string, LucideIcon> = {
   'Academic': BookOpen,
   'Sports': Dumbbell,
   'Technology': Code,
@@ -26,7 +28,7 @@ const AllActivities = () => {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [dbActivities, setDbActivities] = useState<any[]>([]);
+  const [dbActivities, setDbActivities] = useState<(Tables<'activities'> & { host_name: string | null; host_avatar: string | null })[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Load activities from database — all events on this page are real
@@ -45,16 +47,27 @@ const AllActivities = () => {
 
       // Fetch profile names for each activity
       if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(a => a.user_id))];
+        // Only show approved activities that haven't passed their deadline yet
+        const now = Date.now();
+        const visible = data.filter(a =>
+          (a.approval_status === null || a.approval_status === 'approved') &&
+          (!a.deadline || new Date(a.deadline).getTime() > now)
+        );
+        const userIds = [...new Set(visible.map(a => a.user_id))];
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('user_id, full_name')
+          .select('user_id, full_name, avatar_url')
           .in('user_id', userIds);
 
-        const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
-        const activitiesWithNames = data.map(activity => ({
+        const profileMap = new Map(profiles?.map(p => [p.user_id, { name: p.full_name, avatar: p.avatar_url }]) || []);
+        const activitiesWithNames = visible.map(activity => ({
           ...activity,
-          owner_name: profileMap.get(activity.user_id) || 'Unknown'
+          host_name: activity.organizer_type === 'group'
+            ? (activity.group_name || 'Unknown')
+            : (profileMap.get(activity.user_id)?.name || 'Unknown'),
+          host_avatar: activity.organizer_type === 'group'
+            ? null
+            : (profileMap.get(activity.user_id)?.avatar || null)
         }));
         setDbActivities(activitiesWithNames);
       } else {
@@ -127,7 +140,7 @@ const AllActivities = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`cursor-pointer transition-colors ${selectedCategory === category
                   ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'}`}
+                  : 'bg-primary/10 text-primary border-primary/30'}`}
               >
                 {category}
               </Badge>
@@ -164,9 +177,18 @@ const AllActivities = () => {
                     className="crystal-card group hover:scale-[1.02] transition-all duration-300 cursor-pointer overflow-hidden"
                     onClick={() => handleActivityClick(activity.id)}
                   >
-                    <div className="h-24 relative bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10 flex items-center justify-center">
-                      <IconComponent className="h-10 w-10 text-primary/70 group-hover:scale-110 transition-all duration-300" />
-                      <Badge className="absolute top-3 right-3 text-xs bg-accent/20 text-accent border-accent/30">
+                    <div className={`h-24 relative flex items-center justify-center ${activity.photo_url ? '' : 'bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10'}`}>
+                      {activity.photo_url ? (
+                        <img
+                          src={activity.photo_url}
+                          alt={activity.title || 'Activity'}
+                          className="w-full h-full object-cover pointer-events-none"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <IconComponent className="h-10 w-10 text-primary/70 group-hover:scale-110 transition-all duration-300" />
+                      )}
+                      <Badge className="absolute top-3 right-3 text-xs bg-accent/20 text-accent border-accent/30 hover:bg-accent/20 hover:text-accent">
                         {activity.category}
                       </Badge>
                     </div>
@@ -186,15 +208,27 @@ const AllActivities = () => {
                             <Globe className="h-3 w-3 text-accent" /> {activity.venue}
                           </p>
                         )}
-                        <p
-                          className="text-xs text-muted-foreground hover:text-primary cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (activity.user_id) navigate(`/user/${activity.user_id}`);
-                          }}
-                        >
-                          Organized by {activity.owner_name || 'Anonymous'}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p
+                            className="text-xs text-muted-foreground cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (activity.user_id) navigate(`/user/${activity.user_id}`);
+                            }}
+                          >
+                            {activity.organizer_type !== 'group'
+                              ? `Organized by ${activity.host_name || 'Anonymous'}`
+                              : `Hosted by ${activity.host_name || 'the club'}`}
+                          </p>
+                          {activity.organizer_type !== 'group' && (
+                            <Avatar className="h-5 w-5 border border-primary/30 shrink-0">
+                              <AvatarImage src={activity.host_avatar || undefined} alt={activity.host_name || 'Organizer'} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-[9px]">
+                                {(activity.host_name || 'U').charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

@@ -1,22 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SplashScreenProps {
   onEnterApp: () => void;
+  onFadeStart?: () => void;
 }
 
-const SplashScreen = ({ onEnterApp }: SplashScreenProps) => {
+const SplashScreen = ({ onEnterApp, onFadeStart }: SplashScreenProps) => {
   const [phase, setPhase] = useState(0); // 0: initial, 1: G, 2: T, 3: A, 4: tagline, 5: fade out
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; size: number; delay: number }>>([]);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; size: number; delay: number; hue: number; duration: number }>>([]);
+  // Hold callbacks in a ref so a parent re-render (e.g. appMounted flipping)
+  // can never give them a new identity and restart the intro timeline.
+  const callbacksRef = useRef({ onEnterApp, onFadeStart });
+  callbacksRef.current = { onEnterApp, onFadeStart };
 
   useEffect(() => {
-    // Generate floating particles
+    // Generate floating particles — hues/durations are stable so they don't
+    // re-randomize on every phase re-render.
     const newParticles = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 4 + 1,
       delay: Math.random() * 3,
+      hue: 195 + Math.random() * 45,
+      duration: 4 + Math.random() * 3,
     }));
     setParticles(newParticles);
 
@@ -26,12 +34,12 @@ const SplashScreen = ({ onEnterApp }: SplashScreenProps) => {
       setTimeout(() => setPhase(2), 1200),   // Show T
       setTimeout(() => setPhase(3), 1900),   // Show A
       setTimeout(() => setPhase(4), 2800),   // Show tagline
-      setTimeout(() => setPhase(5), 4500),   // Start fade out
-      setTimeout(() => onEnterApp(), 5200),  // Complete
+      setTimeout(() => { callbacksRef.current.onFadeStart?.(); setPhase(5); }, 4500),   // Start fade out
+      setTimeout(() => callbacksRef.current.onEnterApp(), 5200),  // Complete
     ];
 
     return () => timers.forEach(clearTimeout);
-  }, [onEnterApp]);
+  }, []);
 
   return (
     <AnimatePresence>
@@ -116,7 +124,7 @@ const SplashScreen = ({ onEnterApp }: SplashScreenProps) => {
                 top: `${particle.y}%`,
                 width: particle.size,
                 height: particle.size,
-                background: `radial-gradient(circle, hsl(${195 + Math.random() * 45} 80% 70%), transparent)`,
+                background: `radial-gradient(circle, hsl(${particle.hue} 80% 70%), transparent)`,
               }}
               animate={{
                 y: [0, -30, 0],
@@ -124,7 +132,7 @@ const SplashScreen = ({ onEnterApp }: SplashScreenProps) => {
                 scale: [0.5, 1.5, 0.5],
               }}
               transition={{
-                duration: 4 + Math.random() * 3,
+                duration: particle.duration,
                 repeat: Infinity,
                 delay: particle.delay,
                 ease: "easeInOut",
@@ -141,24 +149,28 @@ const SplashScreen = ({ onEnterApp }: SplashScreenProps) => {
           transition={{ duration: 1 }}
         >
           {[...Array(12)].map((_, i) => (
-            <motion.div
+            <div
               key={i}
               className="absolute w-[2px] h-[40vh] origin-bottom"
-              style={{
-                background: 'linear-gradient(to top, hsl(217 90% 61% / 0.6), transparent)',
-                transform: `rotate(${i * 30}deg)`,
-              }}
-              animate={{
-                opacity: [0.2, 0.5, 0.2],
-                scaleY: [0.8, 1.2, 0.8],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: i * 0.1,
-                ease: "easeInOut",
-              }}
-            />
+              style={{ transform: `rotate(${i * 30}deg)` }}
+            >
+              <motion.div
+                className="w-full h-full origin-bottom"
+                style={{
+                  background: 'linear-gradient(to top, hsl(217 90% 61% / 0.6), transparent)',
+                }}
+                animate={{
+                  opacity: [0.2, 0.5, 0.2],
+                  scaleY: [0.8, 1.2, 0.8],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.1,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
           ))}
         </motion.div>
 

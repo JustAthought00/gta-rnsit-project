@@ -9,12 +9,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface SkillToEdit {
   id: string;
-  title: string;
-  description: string;
-  category: string;
-  experience: string;
-  hourly_rate: string;
-  availability: string;
+  title: string | null;
+  description: string | null;
+  category: string | null;
+  experience: string | null;
+  hourly_rate: string | null;
+  availability: string | null;
 }
 
 interface AddSkillModalProps {

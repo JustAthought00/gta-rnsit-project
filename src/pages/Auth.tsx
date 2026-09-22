@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Lock, User, CheckCircle, ArrowLeft, KeyRound, RefreshCw } from 'lucide-react';
@@ -37,19 +37,23 @@ const Auth = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [sentVerificationEmail, setSentVerificationEmail] = useState('');
+  const [verifyMode, setVerifyMode] = useState<'signup' | 'reset'>('signup');
+  // Prevents the auth listener from auto-redirecting right after a password
+  // reset completes (the recovery session can still be briefly live).
+  const passwordResetDone = useRef(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setViewMode('reset_password');
         toast.info('Password recovery link verified. Please set your new password.');
-      } else if (session?.user && viewMode !== 'reset_password') {
+      } else if (session?.user && viewMode !== 'reset_password' && !passwordResetDone.current) {
         navigate(next);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && viewMode !== 'reset_password') {
+      if (session?.user && viewMode !== 'reset_password' && !passwordResetDone.current) {
         navigate(next);
       }
     });
@@ -79,6 +83,7 @@ const Auth = () => {
         if (error.message.includes('Invalid login credentials')) {
           toast.error('Invalid email or password. Please try again.');
         } else if (error.message.includes('Email not confirmed')) {
+          setVerifyMode('signup');
           setSentVerificationEmail(signInData.email);
           setViewMode('verify_sent');
           toast.warning('Please verify your email inbox before logging in.');
@@ -133,10 +138,15 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
+        setVerifyMode('signup');
         setSentVerificationEmail(signUpData.email);
         if (data.session) {
-          toast.success('Account created successfully!');
-          navigate(next);
+          // Email confirmations are off in Supabase, so signUp returns a
+          // session immediately. Sign it out and force the verification step
+          // so every account is confirmed before it can be used.
+          await supabase.auth.signOut();
+          setViewMode('verify_sent');
+          toast.success('Verification link sent to your RNSIT email!');
         } else {
           // Email confirmation required
           setViewMode('verify_sent');
@@ -167,6 +177,7 @@ const Auth = () => {
         toast.error(error.message);
       } else {
         toast.success('Password reset link sent to your Gmail inbox!');
+        setVerifyMode('reset');
         setSentVerificationEmail(forgotEmail);
         setViewMode('verify_sent');
       }
@@ -197,6 +208,11 @@ const Auth = () => {
       if (error) {
         toast.error(error.message);
       } else {
+        // The recovery flow signs the user in with a temporary session;
+        // sign it out so the "You can now log in" screen is shown instead of
+        // being yanked straight to the app by the auth listener.
+        await supabase.auth.signOut();
+        passwordResetDone.current = true;
         toast.success('Password updated successfully! You can now log in.');
         setViewMode('main');
         setActiveTab('signin');
@@ -212,20 +228,33 @@ const Auth = () => {
     if (!sentVerificationEmail) return;
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: sentVerificationEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+      if (verifyMode === 'reset') {
+        // A password-reset request goes to an existing confirmed account;
+        // resend another recovery link (resend() only supports signup/email-change).
+        const { error } = await supabase.auth.resetPasswordForEmail(sentVerificationEmail, {
+          redirectTo: `${window.location.origin}/auth?mode=reset`,
+        });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Password reset link resent to your email!');
         }
-      });
-      if (error) {
-        toast.error(error.message);
       } else {
-        toast.success('Verification link resent to your email!');
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: sentVerificationEmail,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
+          }
+        });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Verification link resent to your email!');
+        }
       }
     } catch (error) {
-      toast.error('Failed to resend verification email');
+      toast.error('Failed to resend email');
     } finally {
       setIsLoading(false);
     }

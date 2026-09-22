@@ -17,7 +17,10 @@ const NebulaBackground = () => {
         const speed = (index + 1) * 0.5;
         const offsetX = (x - 0.5) * 30 * speed;
         const offsetY = (y - 0.5) * 30 * speed;
-        element.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        // Use the separate `translate` property (not `transform`) so it composes
+        // with the orbs' transform-based nebulaFloat animation instead of being
+        // overridden by it.
+        element.style.translate = `${offsetX}px ${offsetY}px`;
       });
     };
 

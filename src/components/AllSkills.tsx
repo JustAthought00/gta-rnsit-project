@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Code, Music, Palette, PenTool, Video, Briefcase, TrendingUp, Zap, Search } from 'lucide-react';
+import { ArrowLeft, Code, Music, Palette, PenTool, Video, Briefcase, TrendingUp, Zap, Search, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import NebulaBackground from './NebulaBackground';
+import type { Tables } from '@/integrations/supabase/types';
 
-const categoryIcons: Record<string, any> = {
+const categoryIcons: Record<string, LucideIcon> = {
   'Programming & Tech': Code,
   'Graphics & Design': Palette,
   'Writing & Translation': PenTool,
@@ -25,7 +26,7 @@ const AllSkills = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [dbSkills, setDbSkills] = useState<any[]>([]);
+  const [dbSkills, setDbSkills] = useState<(Tables<'skills'> & { owner_name: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   const selectedCategory = searchParams.get('category') || '';
@@ -165,7 +166,7 @@ const AllSkills = () => {
               onClick={() => handleCategoryFilter('')}
               className={`cursor-pointer transition-colors ${!selectedCategory
                 ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'}`}
+                : 'bg-primary/10 text-primary border-primary/30'}`}
             >
               All
             </Badge>
@@ -175,7 +176,7 @@ const AllSkills = () => {
                 onClick={() => handleCategoryFilter(name)}
                 className={`cursor-pointer transition-colors ${selectedCategory === name
                   ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'}`}
+                  : 'bg-primary/10 text-primary border-primary/30'}`}
               >
                 {name}
               </Badge>

@@ -1,4 +1,4 @@
-import { Search, Users, Calendar, Zap, Code, Camera, Music, Palette, PenTool, Video, Mic, Briefcase, Globe, TrendingUp, Moon, Sun, MessageCircle, Plus, User as UserIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, Calendar, Zap, Code, Camera, Music, Palette, PenTool, Video, Mic, Briefcase, Globe, TrendingUp, Moon, Sun, MessageCircle, Plus, User as UserIcon, ChevronLeft, ChevronRight, Menu, X, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,6 +82,7 @@ const Home = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Tables<'profiles'> | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const skillsDrag = useDragScroll();
   const activitiesDrag = useDragScroll();
   const [searchTerm, setSearchTerm] = useState('');
@@ -496,9 +497,10 @@ const Home = () => {
               >
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
-              
+
               {user ? (
                 <>
+                <NotificationCenter userId={user?.id || null} />
                 <div className="hidden xl:flex items-center gap-1 mx-2">
                   <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/skills')}>Skills</Button>
                   <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/activities')}>Activities</Button>
@@ -510,8 +512,7 @@ const Home = () => {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-1 md:space-x-3">
-                  <NotificationCenter userId={user?.id || null} />
+                <div className="hidden md:flex items-center space-x-1 md:space-x-3">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -537,7 +538,7 @@ const Home = () => {
                   >
                     <UserIcon className="h-4 w-4" />
                   </Button>
-                  <div className="hidden md:block text-sm">
+                  <div className="hidden lg:block text-sm">
                     <span className="text-muted-foreground">Welcome, </span>
                     <span className="font-medium text-foreground">{userName.split(' ')[0]}</span>
                   </div>
@@ -547,29 +548,48 @@ const Home = () => {
                     className="header-glow-btn"
                     onClick={handleSignOut}
                   >
-                    <span className="hidden md:inline">Sign Out</span>
-                    <span className="md:hidden">Out</span>
+                    <span className="hidden lg:inline">Sign Out</span>
+                    <LogOut className="lg:hidden h-4 w-4" />
                   </Button>
                 </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="header-glow-btn md:hidden p-2"
+                  aria-label="Menu"
+                  onClick={() => setIsMenuOpen((open) => !open)}
+                >
+                  {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </Button>
                 </>
               ) : (
                 <>
-                  <Button 
-                    variant="ghost" 
+                  <div className="hidden md:flex items-center space-x-1 md:space-x-3">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="header-glow-btn"
+                      onClick={handleSignIn}
+                    >
+                      Sign In
+                    </Button>
+                    <Button 
+                      size="sm"
+                      className="plasma-button text-primary-foreground"
+                      onClick={handleGetStarted}
+                    >
+                      Get Started
+                    </Button>
+                  </div>
+                  <Button
+                    variant="ghost"
                     size="sm"
-                    className="header-glow-btn"
-                    onClick={handleSignIn}
+                    className="header-glow-btn md:hidden p-2"
+                    aria-label="Menu"
+                    onClick={() => setIsMenuOpen((open) => !open)}
                   >
-                    <span className="hidden md:inline">Sign In</span>
-                    <span className="md:hidden">In</span>
-                  </Button>
-                  <Button 
-                    size="sm"
-                    className="plasma-button text-primary-foreground"
-                    onClick={handleGetStarted}
-                  >
-                    <span className="hidden md:inline">Get Started</span>
-                    <span className="md:hidden">Start</span>
+                    {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                   </Button>
                 </>
               )}
@@ -598,6 +618,96 @@ const Home = () => {
               <option value="people">People</option>
             </select>
           </div>
+
+          {isMenuOpen && (
+            <div className="md:hidden mt-3 pt-3 border-t border-border/40 flex flex-col gap-1 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              {[
+                { label: 'Home', path: '/' },
+                { label: 'Skills', path: '/skills' },
+                { label: 'Activities', path: '/activities' },
+                { label: 'People', path: '/people' },
+                { label: 'Communities', path: '/communities' },
+                { label: 'Faculty', path: '/teachers' },
+              ].map((item) => (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start header-glow-btn"
+                  onClick={() => { setIsMenuOpen(false); navigate(item.path); }}
+                >
+                  {item.label}
+                </Button>
+              ))}
+              {profile?.role === 'teacher' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start header-glow-btn text-primary"
+                  onClick={() => { setIsMenuOpen(false); navigate('/manage'); }}
+                >
+                  Manage
+                </Button>
+              )}
+
+              <div className="h-px bg-border/60 my-1" />
+
+              {user ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start header-glow-btn"
+                    onClick={() => { setIsMenuOpen(false); setShowMessagesModal(true); }}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Messages
+                    {unreadCount > 0 && (
+                      <Badge className="ml-auto h-5 min-w-5 px-1 text-xs bg-accent text-accent-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start header-glow-btn"
+                    onClick={() => { setIsMenuOpen(false); navigate(`/user/${user?.id}`); }}
+                  >
+                    <UserIcon className="h-4 w-4 mr-2" />
+                    My Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start header-glow-btn text-destructive"
+                    onClick={() => { setIsMenuOpen(false); handleSignOut(); }}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start header-glow-btn"
+                    onClick={() => { setIsMenuOpen(false); handleSignIn(); }}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="justify-start plasma-button text-primary-foreground"
+                    onClick={() => { setIsMenuOpen(false); handleGetStarted(); }}
+                  >
+                    Get Started
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </header>
 

@@ -307,7 +307,7 @@ const EditProfile = () => {
 
       <main className="container mx-auto px-4 py-8 relative z-10 max-w-3xl">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-8 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/50">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>

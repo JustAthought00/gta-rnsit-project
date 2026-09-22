@@ -1,4 +1,4 @@
-import { Search, Users, Calendar, Zap, Code, Camera, Music, Palette, PenTool, Video, Mic, Briefcase, Globe, TrendingUp, Moon, Sun, MessageCircle, Plus, User as UserIcon, ChevronLeft, ChevronRight, Menu, X, LogOut } from 'lucide-react';
+import { Search, Users, Calendar, Zap, Code, Camera, Music, Palette, PenTool, Video, Mic, Briefcase, Globe, TrendingUp, Moon, Sun, MessageCircle, Plus, User as UserIcon, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +82,6 @@ const Home = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Tables<'profiles'> | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const skillsDrag = useDragScroll();
   const activitiesDrag = useDragScroll();
   const [searchTerm, setSearchTerm] = useState('');
@@ -552,16 +551,6 @@ const Home = () => {
                     <LogOut className="lg:hidden h-4 w-4" />
                   </Button>
                 </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="header-glow-btn md:hidden p-2"
-                  aria-label="Menu"
-                  onClick={() => setIsMenuOpen((open) => !open)}
-                >
-                  {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                </Button>
                 </>
               ) : (
                 <>
@@ -582,132 +571,10 @@ const Home = () => {
                       Get Started
                     </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="header-glow-btn md:hidden p-2"
-                    aria-label="Menu"
-                    onClick={() => setIsMenuOpen((open) => !open)}
-                  >
-                    {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                  </Button>
                 </>
               )}
             </div>
           </div>
-          
-          <div className="md:hidden mt-3 flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder={`Search ${searchScope}...`}
-                className="header-glow-field pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleSearch}
-              />
-            </div>
-            <select
-              value={searchScope}
-              onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
-              aria-label="Search in"
-              className="header-glow-field text-sm font-medium border rounded-md px-3 py-2.5 cursor-pointer focus:outline-none"
-            >
-              <option value="skills">Skills</option>
-              <option value="activities">Activities</option>
-              <option value="people">People</option>
-            </select>
-          </div>
-
-          {isMenuOpen && (
-            <div className="md:hidden mt-3 pt-3 border-t border-border/40 flex flex-col gap-1 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-              {[
-                { label: 'Home', path: '/' },
-                { label: 'Skills', path: '/skills' },
-                { label: 'Activities', path: '/activities' },
-                { label: 'People', path: '/people' },
-                { label: 'Communities', path: '/communities' },
-                { label: 'Faculty', path: '/teachers' },
-              ].map((item) => (
-                <Button
-                  key={item.path}
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start header-glow-btn"
-                  onClick={() => { setIsMenuOpen(false); navigate(item.path); }}
-                >
-                  {item.label}
-                </Button>
-              ))}
-              {profile?.role === 'teacher' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start header-glow-btn text-primary"
-                  onClick={() => { setIsMenuOpen(false); navigate('/manage'); }}
-                >
-                  Manage
-                </Button>
-              )}
-
-              <div className="h-px bg-border/60 my-1" />
-
-              {user ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start header-glow-btn"
-                    onClick={() => { setIsMenuOpen(false); setShowMessagesModal(true); }}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Messages
-                    {unreadCount > 0 && (
-                      <Badge className="ml-auto h-5 min-w-5 px-1 text-xs bg-accent text-accent-foreground">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start header-glow-btn"
-                    onClick={() => { setIsMenuOpen(false); navigate(`/user/${user?.id}`); }}
-                  >
-                    <UserIcon className="h-4 w-4 mr-2" />
-                    My Profile
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start header-glow-btn text-destructive"
-                    onClick={() => { setIsMenuOpen(false); handleSignOut(); }}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start header-glow-btn"
-                    onClick={() => { setIsMenuOpen(false); handleSignIn(); }}
-                  >
-                    Sign In
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="justify-start plasma-button text-primary-foreground"
-                    onClick={() => { setIsMenuOpen(false); handleGetStarted(); }}
-                  >
-                    Get Started
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
         </div>
       </header>
 

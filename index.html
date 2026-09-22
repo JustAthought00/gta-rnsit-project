@@ -3,6 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var DESIGN_WIDTH = 1440;
+        if (window.innerWidth < DESIGN_WIDTH) {
+          var m = document.querySelector('meta[name="viewport"]');
+          if (m) m.setAttribute('content', 'width=' + DESIGN_WIDTH);
+        }
+      })();
+    </script>
     <link rel="icon" type="image/jpeg" href="/gta-logo.jpg" />
     <link rel="apple-touch-icon" href="/gta-logo.jpg" />
     <title>GTA (Go To App) — RNSIT Student Skill Exchange</title>

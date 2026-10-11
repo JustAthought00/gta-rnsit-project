@@ -14,6 +14,20 @@
     display: none;
   }
 
+  /* Soft-left/right fade on horizontal carousels (mobile only — lets users
+     know there is more content beyond the edge) */
+  .carousel-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+  }
+
+  @media (min-width: 768px) {
+    .carousel-fade-x {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+  }
+
   /* 3D perspective helper used by the splash intro letters */
   .perspective-1000 {
     perspective: 1000px;
@@ -161,12 +175,33 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground font-sans;
     min-height: 100vh;
+    min-height: 100dvh;
     background: var(--gradient-void);
+  }
+
+  /* Respect users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Keep the fixed mobile bottom nav from covering page content */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    }
   }
 }
 

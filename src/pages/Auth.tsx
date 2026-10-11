@@ -517,7 +517,7 @@ const Auth = () => {
                         id="signup-department"
                         value={signUpData.department}
                         onChange={(e) => setSignUpData({ ...signUpData, department: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg bg-card/50 text-foreground border-primary/20 focus:border-primary/50 focus:outline-none"
+                        className="w-full px-3 py-2 h-11 md:h-10 border rounded-lg bg-card/50 text-foreground border-primary/20 focus:border-primary/50 focus:outline-none"
                         required
                       >
                         <option value="">Select your department</option>
@@ -538,7 +538,7 @@ const Auth = () => {
                         id="signup-year"
                         value={signUpData.year}
                         onChange={(e) => setSignUpData({ ...signUpData, year: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg bg-card/50 text-foreground border-primary/20 focus:border-primary/50 focus:outline-none"
+                        className="w-full px-3 py-2 h-11 md:h-10 border rounded-lg bg-card/50 text-foreground border-primary/20 focus:border-primary/50 focus:outline-none"
                         required
                       >
                         <option value="">Select your year</option>

@@ -198,25 +198,25 @@ const ProjectDetail = () => {
 
       <header className="glass-header sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-foreground/70 hover:text-foreground hover:bg-primary/10">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-foreground/70 hover:text-foreground hover:bg-primary/10 shrink-0">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Home
               </Button>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{project.title}</h1>
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">{project.title}</h1>
               </div>
             </div>
             {isOwner && (
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-muted-foreground hover:text-primary">
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit
+              <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-muted-foreground hover:text-primary px-2 md:px-3">
+                  <Pencil className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Edit</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-muted-foreground hover:text-destructive px-2 md:px-3">
+                  <Trash2 className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Delete</span>
                 </Button>
               </div>
             )}
@@ -292,7 +292,7 @@ const ProjectDetail = () => {
                     {project.owner?.full_name} invited you to collaborate on this project.
                     {myInvite.skill && <> They'd like you to work on <span className="text-foreground font-medium">{myInvite.skill}</span>.</>}
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => respondToInvite('declined')}>
                       <X className="h-4 w-4 mr-2" />Decline
                     </Button>

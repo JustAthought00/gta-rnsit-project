@@ -472,7 +472,7 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+          <div className="fixed inset-x-3 top-16 z-50 bg-card border border-border rounded-lg shadow-lg overflow-hidden md:absolute md:inset-x-auto md:top-full md:mt-2 md:right-0 md:w-80">
             <div className="p-3 border-b border-border flex items-center justify-between">
               <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
               <div className="flex items-center gap-2">

@@ -349,32 +349,32 @@ const SkillDetail = () => {
 
       <header className="glass-header sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-foreground/70 hover:text-foreground hover:bg-primary/10">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-foreground/70 hover:text-foreground hover:bg-primary/10 shrink-0">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{skill.name}</h1>
-                <p className="text-muted-foreground text-sm">{skill.description}</p>
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">{skill.name}</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm truncate">{skill.description}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
               {dbSkill && currentUser?.id === dbSkill.user_id && (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-muted-foreground hover:text-primary">
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
+                  <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-muted-foreground hover:text-primary px-2 md:px-3">
+                    <Pencil className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Edit</span>
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-muted-foreground hover:text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-muted-foreground hover:text-destructive px-2 md:px-3">
+                    <Trash2 className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Delete</span>
                   </Button>
                 </>
               )}
               {dbSkill && (
-                <Button variant="ghost" size="sm" onClick={toggleBookmark} className="text-muted-foreground hover:text-primary">
+                <Button variant="ghost" size="sm" onClick={toggleBookmark} className="text-muted-foreground hover:text-primary px-2 md:px-3">
                   {isBookmarked ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
                 </Button>
               )}
@@ -423,12 +423,12 @@ const SkillDetail = () => {
           <Card className="crystal-card mb-6">
             <CardContent className="pt-6">
               {!myRequest && !showRequestForm && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button onClick={() => setShowRequestForm(true)} className="plasma-button text-primary-foreground">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <Button onClick={() => setShowRequestForm(true)} className="plasma-button text-primary-foreground w-full sm:w-auto">
                     <Send className="h-4 w-4 mr-2" />
                     Request this Skill
                   </Button>
-                  <Button variant="outline" className="border-primary/40" onClick={() => setShowMessagesModal(true)}>
+                  <Button variant="outline" className="border-primary/40 w-full sm:w-auto" onClick={() => setShowMessagesModal(true)}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Message
                   </Button>
@@ -444,11 +444,11 @@ const SkillDetail = () => {
                     placeholder="What do you need help with? (optional)"
                     className="bg-background border-border"
                   />
-                  <div className="flex gap-3">
-                    <Button onClick={submitRequest} disabled={submittingRequest} size="sm" className="plasma-button text-primary-foreground">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <Button onClick={submitRequest} disabled={submittingRequest} size="sm" className="plasma-button text-primary-foreground w-full sm:w-auto">
                       {submittingRequest ? 'Sending...' : 'Send Request'}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setShowRequestForm(false)} disabled={submittingRequest}>
+                    <Button variant="outline" size="sm" onClick={() => setShowRequestForm(false)} disabled={submittingRequest} className="w-full sm:w-auto">
                       Cancel
                     </Button>
                   </div>

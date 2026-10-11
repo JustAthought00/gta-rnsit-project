@@ -98,22 +98,22 @@ const AllActivities = () => {
       {/* Header */}
       <header className="glass-header sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <div className="flex items-center space-x-4 flex-1 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/')}
-                className="text-foreground/70 hover:text-foreground hover:bg-primary/10"
+                className="text-foreground/70 hover:text-foreground hover:bg-primary/10 shrink-0"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Home
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-tight">
                   Campus Activities & Events
                 </h1>
-                <p className="text-muted-foreground text-sm">Everything happening at RNSIT, organized by students</p>
+                <p className="text-muted-foreground text-xs sm:text-sm">Everything happening at RNSIT, organized by students</p>
               </div>
             </div>
           </div>

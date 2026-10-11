@@ -17,7 +17,8 @@ const SplashScreen = ({ onEnterApp, onFadeStart }: SplashScreenProps) => {
   useEffect(() => {
     // Generate floating particles — hues/durations are stable so they don't
     // re-randomize on every phase re-render.
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    const newParticles = Array.from({ length: isMobile ? 20 : 50 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -208,7 +209,7 @@ const SplashScreen = ({ onEnterApp, onFadeStart }: SplashScreenProps) => {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
               <motion.span
-                className="text-7xl md:text-9xl font-black bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent"
+                className="text-6xl sm:text-7xl md:text-9xl font-black bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent"
                 style={{
                   filter: 'drop-shadow(0 0 40px hsl(217 90% 61% / 0.8))',
                   textShadow: '0 0 60px hsl(217 90% 61% / 0.5)',
@@ -238,7 +239,7 @@ const SplashScreen = ({ onEnterApp, onFadeStart }: SplashScreenProps) => {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
               <motion.span
-                className="text-7xl md:text-9xl font-black bg-gradient-to-br from-cyan-400 via-teal-500 to-cyan-600 bg-clip-text text-transparent"
+                className="text-6xl sm:text-7xl md:text-9xl font-black bg-gradient-to-br from-cyan-400 via-teal-500 to-cyan-600 bg-clip-text text-transparent"
                 style={{
                   filter: 'drop-shadow(0 0 40px hsl(190 90% 50% / 0.8))',
                   textShadow: '0 0 60px hsl(190 90% 50% / 0.5)',
@@ -268,7 +269,7 @@ const SplashScreen = ({ onEnterApp, onFadeStart }: SplashScreenProps) => {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
               <motion.span
-                className="text-7xl md:text-9xl font-black bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent"
+                className="text-6xl sm:text-7xl md:text-9xl font-black bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent"
                 style={{
                   filter: 'drop-shadow(0 0 40px hsl(205 90% 55% / 0.8))',
                   textShadow: '0 0 60px hsl(205 90% 55% / 0.5)',
@@ -295,7 +296,7 @@ const SplashScreen = ({ onEnterApp, onFadeStart }: SplashScreenProps) => {
             transition={{ duration: 0.8 }}
           >
             <motion.p 
-              className="text-lg md:text-2xl font-light tracking-[0.3em] text-white/60"
+              className="text-base sm:text-lg md:text-2xl font-light tracking-[0.2em] sm:tracking-[0.3em] text-white/60"
               initial={{ y: 30, opacity: 0 }}
               animate={phase >= 4 ? { y: 0, opacity: 1 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}

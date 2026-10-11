@@ -915,7 +915,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                   </p>
                 </div>
               ) : (
-                <div className="p-3 md:p-4 border-t border-border bg-background">
+                <div className="p-3 md:p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] md:pb-4 border-t border-border bg-background">
                   <div className="flex items-center space-x-2 md:space-x-3">
                     <div className="flex-1 relative">
                       <Input
@@ -929,9 +929,9 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                         <Button
                           onClick={sendMessage}
                           size="sm"
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-6 w-6 p-1"
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-8 w-8 p-1.5"
                         >
-                          <Send className="h-3 w-3" />
+                          <Send className="h-4 w-4" />
                         </Button>
                       )}
                     </div>

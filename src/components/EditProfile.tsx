@@ -295,12 +295,12 @@ const EditProfile = () => {
 
       <header className="glass-header sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate('/')} className="text-foreground hover:bg-muted">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <Button variant="ghost" onClick={() => navigate('/')} className="text-foreground hover:bg-muted shrink-0">
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Profile
             </Button>
-            <h1 className="text-xl font-bold text-foreground">Manage Profile</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">Manage Profile</h1>
           </div>
         </div>
       </header>
@@ -316,7 +316,7 @@ const EditProfile = () => {
 
           <TabsContent value="profile">
             <Card className="crystal-card">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
                 <CardTitle className="text-foreground flex items-center gap-2">
                   <User className="h-5 w-5 text-primary" />
                   Edit Profile
@@ -404,7 +404,7 @@ const EditProfile = () => {
                     )}
                     <button
                       onClick={() => bannerInputRef.current?.click()}
-                      className="absolute bottom-3 right-3 bg-primary text-primary-foreground rounded-full p-2 hover:bg-primary/90 transition-colors shadow-glow"
+                      className="absolute bottom-3 right-3 bg-primary text-primary-foreground rounded-full p-2.5 md:p-2 hover:bg-primary/90 transition-colors shadow-glow"
                       disabled={uploading}
                       title="Upload banner"
                     >
@@ -413,7 +413,7 @@ const EditProfile = () => {
                     {bannerUrl && (
                       <button
                         onClick={() => setBannerUrl(null)}
-                        className="absolute top-3 right-3 bg-destructive/90 text-white rounded-full p-2 hover:bg-destructive transition-colors"
+                        className="absolute top-3 right-3 bg-destructive/90 text-white rounded-full p-2.5 md:p-2 hover:bg-destructive transition-colors"
                         title="Remove banner"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -440,7 +440,7 @@ const EditProfile = () => {
                     </Avatar>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 hover:bg-primary/90 transition-colors"
+                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2.5 md:p-2 hover:bg-primary/90 transition-colors"
                       disabled={uploading}
                     >
                       <Camera className="h-4 w-4" />
@@ -542,7 +542,7 @@ const EditProfile = () => {
 
           <TabsContent value="skills">
             <Card className="crystal-card">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
                 <CardTitle className="text-foreground flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-primary" />
                   Manage Skills
@@ -557,8 +557,8 @@ const EditProfile = () => {
                 ) : (
                   <div className="space-y-4">
                     {skills.map((skill) => (
-                      <div key={skill.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                        <div>
+                      <div key={skill.id} className="flex items-center justify-between gap-2 flex-wrap p-4 rounded-lg bg-muted/30 border border-border">
+                        <div className="min-w-0">
                           <h3 className="font-semibold text-foreground">{skill.title}</h3>
                           <p className="text-sm text-muted-foreground">{skill.category}</p>
                         </div>
@@ -580,7 +580,7 @@ const EditProfile = () => {
 
           <TabsContent value="projects">
             <Card className="crystal-card">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
                 <CardTitle className="text-foreground flex items-center gap-2">
                   <Code className="h-5 w-5 text-accent" />
                   Manage Projects
@@ -595,8 +595,8 @@ const EditProfile = () => {
                 ) : (
                   <div className="space-y-4">
                     {projects.map((project) => (
-                      <div key={project.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                        <div>
+                      <div key={project.id} className="flex items-center justify-between gap-2 flex-wrap p-4 rounded-lg bg-muted/30 border border-border">
+                        <div className="min-w-0">
                           <h3 className="font-semibold text-foreground">{project.title}</h3>
                           <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
                         </div>
@@ -618,7 +618,7 @@ const EditProfile = () => {
 
           <TabsContent value="activities">
             <Card className="crystal-card">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
                 <CardTitle className="text-foreground flex items-center gap-2">
                   <CalendarIcon className="h-5 w-5 text-green-400" />
                   Manage Activities
@@ -633,8 +633,8 @@ const EditProfile = () => {
                 ) : (
                   <div className="space-y-4">
                     {activities.map((activity) => (
-                      <div key={activity.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                        <div>
+                      <div key={activity.id} className="flex items-center justify-between gap-2 flex-wrap p-4 rounded-lg bg-muted/30 border border-border">
+                        <div className="min-w-0">
                           <h3 className="font-semibold text-foreground">{activity.title}</h3>
                           <p className="text-sm text-muted-foreground">{activity.date} - {activity.venue}</p>
                         </div>

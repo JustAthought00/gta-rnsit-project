@@ -272,19 +272,19 @@ const UserProfile = () => {
 
       <header className="glass-header sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate('/')} className="text-foreground hover:bg-muted">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <Button variant="ghost" onClick={() => navigate('/')} className="text-foreground hover:bg-muted shrink-0">
               <ArrowLeft className="h-5 w-5 mr-2" />Home
             </Button>
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               {isOwnProfile && (
-                <Button variant="outline" onClick={() => navigate('/edit-profile')} className="border-primary/30 text-primary">
-                  <Settings className="h-4 w-4 mr-2" />Edit Profile
+                <Button variant="outline" onClick={() => navigate('/edit-profile')} className="border-primary/30 text-primary px-3 md:px-4">
+                  <Settings className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Edit Profile</span>
                 </Button>
               )}
               {currentUser && !isOwnProfile && (
-                <Button onClick={handleMessage} className="plasma-button text-primary-foreground">
-                  <MessageCircle className="h-4 w-4 mr-2" />Message
+                <Button onClick={handleMessage} className="plasma-button text-primary-foreground px-3 md:px-4">
+                  <MessageCircle className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Message</span>
                 </Button>
               )}
             </div>

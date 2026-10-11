@@ -769,7 +769,7 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 px-4">
             <Button 
               size="lg" 
-              className="plasma-button text-primary-foreground w-full sm:w-auto h-14 px-10 text-base"
+              className="plasma-button text-primary-foreground w-full sm:w-auto h-14 px-6 md:px-10 text-base"
               onClick={handleFindTalent}
             >
               <Users className="mr-2 h-5 w-5" />
@@ -778,7 +778,7 @@ const Home = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground w-full sm:w-auto h-14 px-10 text-base"
+              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground w-full sm:w-auto h-14 px-6 md:px-10 text-base"
               onClick={handleBrowseActivities}
             >
               <Calendar className="mr-2 h-5 w-5" />
@@ -787,7 +787,7 @@ const Home = () => {
             <Button
               size="lg"
               variant="outline"
-              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground w-full sm:w-auto h-14 px-10 text-base"
+              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground w-full sm:w-auto h-14 px-6 md:px-10 text-base"
               onClick={() => navigate('/people')}
             >
               <UserIcon className="mr-2 h-5 w-5" />
@@ -868,7 +868,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollSkillsRow('left')}
                     aria-label="Scroll featured left"
                   >
@@ -877,7 +877,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollSkillsRow('right')}
                     aria-label="Scroll featured right"
                   >
@@ -888,7 +888,7 @@ className="crystal-card cursor-pointer"
               <div
                 ref={skillsRowRef}
                 {...skillsDrag.handlers}
-                className={`relative z-10 flex gap-3 md:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 no-scrollbar ${skillsDrag.handlers.className}`}
+                className={`relative z-10 flex gap-3 md:gap-4 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory pb-2 no-scrollbar carousel-fade-x ${skillsDrag.handlers.className}`}
               >
                 {dbFeatured.map((skill, index) => (
                   <Card
@@ -977,13 +977,13 @@ className="crystal-card cursor-pointer"
           <Watermark icon={Globe} className="left-[66%] top-[93%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-[24deg]" />
           <Watermark icon={PenTool} className="left-[92%] top-[89%] h-32 w-32 -translate-x-1/2 -translate-y-1/2 rotate-6" />
 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 space-y-2 sm:space-y-0">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground">Activity and Events</h3>
-            <div className="flex items-center gap-2">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Activity and Events</h3>
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-2 mr-1">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollActivitiesRow('left')}
                     aria-label="Scroll activities left"
                   >
@@ -992,7 +992,7 @@ className="crystal-card cursor-pointer"
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full border-primary/30 bg-background/40 text-primary hover:bg-primary/10"
                     onClick={() => scrollActivitiesRow('right')}
                     aria-label="Scroll activities right"
                   >
@@ -1024,7 +1024,7 @@ className="crystal-card cursor-pointer"
             <div
               ref={activitiesRowRef}
               {...activitiesDrag.handlers}
-              className={`relative z-10 flex gap-5 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 no-scrollbar ${activitiesDrag.handlers.className}`}
+              className={`relative z-10 flex gap-5 md:gap-6 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory pb-2 no-scrollbar carousel-fade-x ${activitiesDrag.handlers.className}`}
             >
               {dbActivities.slice(0, 6).map((activity) => (
                 <Card
@@ -1109,7 +1109,7 @@ className="crystal-card cursor-pointer"
         {!user && (
           <div className="container mx-auto text-center relative z-10 py-8 md:py-10">
             <div className="crystal-card p-6 md:p-10 max-w-4xl mx-auto">
-              <h3 className="text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Ready to Connect?
               </h3>
               <p className="text-muted-foreground mb-5 max-w-2xl mx-auto text-sm md:text-base">

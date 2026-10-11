@@ -80,10 +80,10 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-card border border-border w-full rounded-t-2xl sm:rounded-xl max-w-lg sm:max-h-[90vh] max-h-[92dvh] overflow-y-auto sm:mx-auto overscroll-contain">
+        <div className="sticky top-0 z-10 bg-card flex items-center justify-between p-4 sm:p-6 border-b border-border">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" /> Create Community
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -91,7 +91,7 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           <div className="space-y-2">
             <Label className="text-foreground">Community Name *</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Robotics Club" className="bg-muted/50 border-border" />
@@ -128,7 +128,7 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
             </div>
           )}
 
-          <div className="flex gap-3 pt-4">
+          <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-0 bg-card sm:bg-transparent border-t border-border/40 sm:border-0 flex gap-3">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-border">Cancel</Button>
             <Button type="submit" disabled={loading} className="flex-1 plasma-button text-primary-foreground">
               {loading ? 'Creating...' : 'Create Community'}

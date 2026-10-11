@@ -7,6 +7,9 @@ const NebulaBackground = () => {
     const container = containerRef.current;
     if (!container) return;
 
+    // Skip the mousemove parallax on touch devices (no hover) to save battery.
+    if (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       const orbs = container.querySelectorAll('.nebula-orb');
       const x = e.clientX / window.innerWidth;

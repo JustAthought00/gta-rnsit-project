@@ -297,40 +297,40 @@ const ActivityDetail = () => {
       {/* Header */}
       <header className="glass-header sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <div className="flex items-center space-x-4 flex-1 min-w-0">
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/')}
-                className="text-foreground/70 hover:text-foreground hover:bg-primary/10"
+                className="text-foreground/70 hover:text-foreground hover:bg-primary/10 shrink-0"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Home
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-tight truncate">
                   {activity.title}
                 </h1>
-                <p className="text-muted-foreground text-sm">{activity.description}</p>
+                <p className="text-muted-foreground text-xs sm:text-sm truncate">{activity.description}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
               {user?.id === activity.ownerUserId && (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-foreground/70 hover:text-foreground hover:bg-primary/10">
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
+                  <Button variant="ghost" size="sm" onClick={() => setShowEditModal(true)} className="text-foreground/70 hover:text-foreground hover:bg-primary/10 px-2 md:px-3">
+                    <Pencil className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Edit</span>
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-foreground/70 hover:text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-foreground/70 hover:text-destructive px-2 md:px-3">
+                    <Trash2 className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Delete</span>
                   </Button>
                 </>
               )}
               {!isSignedIn && (
-                <Button onClick={handleSignIn} className="plasma-button text-primary-foreground">
+                <Button onClick={handleSignIn} className="plasma-button text-primary-foreground px-3 md:px-4">
                   Sign In to Join
                 </Button>
               )}
@@ -459,7 +459,7 @@ const ActivityDetail = () => {
                   </div>
                 )}
                 {user?.id !== activity.ownerUserId && (
-                  <div className="pt-4 border-t border-border/50 flex flex-wrap gap-3">
+                  <div className="pt-4 border-t border-border/50 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
                     {(activityExpired || activity.approval_status === 'pending') ? (
                       <p className="text-sm text-muted-foreground flex items-center gap-2">
                         <Clock className="h-4 w-4" />
@@ -468,7 +468,7 @@ const ActivityDetail = () => {
                     ) : (
                       <Button
                         variant={isJoined ? 'outline' : 'default'}
-                        className={isJoined ? 'border-primary/40' : 'plasma-button text-primary-foreground'}
+                        className={`${isJoined ? 'border-primary/40' : 'plasma-button text-primary-foreground'} w-full sm:w-auto`}
                         onClick={toggleJoin}
                         disabled={joining || (!isJoined && isFull && isSignedIn)}
                       >
@@ -487,7 +487,7 @@ const ActivityDetail = () => {
                     {activity.approval_status !== 'pending' && (
                       <Button
                         variant="outline"
-                        className="border-primary/40"
+                        className="border-primary/40 w-full sm:w-auto"
                         onClick={handleMessageOrganizer}
                       >
                         <MessageCircle className="h-4 w-4 mr-2" />

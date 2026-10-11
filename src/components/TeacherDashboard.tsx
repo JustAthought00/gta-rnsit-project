@@ -255,10 +255,10 @@ const TeacherDashboard = () => {
 
       <main className="container mx-auto px-4 py-8 relative z-10 max-w-4xl">
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50">
-            <TabsTrigger value="pending" className="relative">Pending Events {pendingActivities.length > 0 && `(${pendingActivities.length})`}</TabsTrigger>
-            <TabsTrigger value="events">All Events</TabsTrigger>
-            <TabsTrigger value="communities">Communities</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto no-scrollbar mb-6 bg-muted/50 md:grid md:grid-cols-3">
+            <TabsTrigger value="pending" className="relative shrink-0">Pending Events {pendingActivities.length > 0 && `(${pendingActivities.length})`}</TabsTrigger>
+            <TabsTrigger value="events" className="shrink-0">All Events</TabsTrigger>
+            <TabsTrigger value="communities" className="shrink-0">Communities</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending">
@@ -275,7 +275,7 @@ const TeacherDashboard = () => {
                   <div className="space-y-4">
                     {pendingActivities.map(activity => (
                       <div key={activity.id} className="p-4 rounded-lg bg-muted/30 border border-border">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-foreground">{activity.title}</h3>
@@ -290,14 +290,14 @@ const TeacherDashboard = () => {
                               {[activity.category, activity.date, activity.time, activity.venue].filter(Boolean).join(' • ')}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => deleteActivity(activity.id)}>
+                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                            <Button variant="ghost" size="sm" className="h-8 sm:h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => deleteActivity(activity.id)} aria-label="Delete event">
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
-                            <Button size="sm" variant="outline" className="h-7 px-2 border-red-500/40 text-red-400 hover:bg-red-500/10" onClick={() => setApproval(activity.id, 'rejected')}>
+                            <Button size="sm" variant="outline" className="h-8 sm:h-7 px-2 border-red-500/40 text-red-400 hover:bg-red-500/10" onClick={() => setApproval(activity.id, 'rejected')}>
                               <XCircle className="h-3.5 w-3.5 mr-1" />Reject
                             </Button>
-                            <Button size="sm" className="h-7 px-3 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setApproval(activity.id, 'approved')}>
+                            <Button size="sm" className="h-8 sm:h-7 px-3 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setApproval(activity.id, 'approved')}>
                               <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Approve
                             </Button>
                           </div>
@@ -384,9 +384,9 @@ const TeacherDashboard = () => {
                                 </p>
                               </div>
                               {member.user_id !== community.leader_id && (
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 shrink-0">
                                   <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => assignRole(community.id, member.user_id, 'president_id')}>
-                                    <Crown className="h-3 w-3 mr-1" />President
+                                    <Crown className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">President</span>
                                   </Button>
                                   <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => assignRole(community.id, member.user_id, 'vice_president_id')}>
                                     VP
@@ -412,10 +412,10 @@ const TeacherDashboard = () => {
                                     <p className="text-sm text-foreground truncate">{request.full_name}</p>
                                   </div>
                                   <Button size="sm" variant="outline" className="h-7 px-2 border-destructive text-destructive hover:bg-destructive/10" onClick={() => handleJoinRequest(request.id, 'rejected')}>
-                                    <X className="h-3 w-3 mr-1" />Decline
+                                    <X className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Decline</span>
                                   </Button>
                                   <Button size="sm" className="h-7 px-2 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => handleJoinRequest(request.id, 'accepted')}>
-                                    <Check className="h-3 w-3 mr-1" />Approve
+                                    <Check className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Approve</span>
                                   </Button>
                                 </div>
                               ))}

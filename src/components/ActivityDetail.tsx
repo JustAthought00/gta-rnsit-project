@@ -353,7 +353,7 @@ const ActivityDetail = () => {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
-        <div className="absolute bottom-4 left-4 text-foreground">
+        <div className="absolute bottom-4 left-4 right-4 text-foreground">
           <div className="flex flex-wrap items-center gap-3">
             {activity.category && (
               <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">

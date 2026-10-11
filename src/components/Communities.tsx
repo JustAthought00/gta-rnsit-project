@@ -432,10 +432,10 @@ const Communities = () => {
                               <p className="text-sm text-foreground truncate">{request.full_name}</p>
                             </div>
                             <Button size="sm" variant="outline" className="h-7 px-2 border-destructive text-destructive hover:bg-destructive/10" onClick={() => handleJoinRequest(request.id, 'rejected')}>
-                              <X className="h-3 w-3 mr-1" />Decline
+                              <X className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Decline</span>
                             </Button>
                             <Button size="sm" className="h-7 px-2 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => handleJoinRequest(request.id, 'accepted')}>
-                              <Check className="h-3 w-3 mr-1" />Approve
+                              <Check className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Approve</span>
                             </Button>
                           </div>
                         ))}

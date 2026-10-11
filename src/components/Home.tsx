@@ -747,10 +747,10 @@ const Home = () => {
           <div className="hidden md:flex absolute bottom-32 left-10 w-16 h-16 rounded-full bg-secondary/60 backdrop-blur-lg items-center justify-center animate-float-pen border border-secondary-foreground/30 shadow-[0_0_30px_rgba(100,116,139,0.55)]">
             <PenTool className="h-8 w-8 text-secondary-foreground drop-shadow-[0_0_8px_rgba(100,116,139,0.9)]" />
           </div>
-          <div className="absolute top-24 md:top-40 right-8 md:right-40 w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/45 backdrop-blur-lg flex items-center justify-center animate-float-slow border border-primary/40 shadow-[0_0_25px_rgba(59,130,246,0.5)]">
+          <div className="hidden md:flex absolute top-24 md:top-40 right-8 md:right-40 w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/45 backdrop-blur-lg items-center justify-center animate-float-slow border border-primary/40 shadow-[0_0_25px_rgba(59,130,246,0.5)]">
             <Palette className="h-5 md:h-6 w-5 md:w-6 text-primary-foreground drop-shadow-[0_0_6px_rgba(59,130,246,0.9)]" />
           </div>
-          <div className="absolute bottom-20 md:bottom-40 right-6 md:right-16 w-12 md:w-14 h-12 md:h-14 rounded-full bg-accent/45 backdrop-blur-lg flex items-center justify-center animate-float-delayed border border-accent/40 shadow-[0_0_25px_rgba(168,85,247,0.5)]">
+          <div className="hidden md:flex absolute bottom-20 md:bottom-40 right-6 md:right-16 w-12 md:w-14 h-12 md:h-14 rounded-full bg-accent/45 backdrop-blur-lg items-center justify-center animate-float-delayed border border-accent/40 shadow-[0_0_25px_rgba(168,85,247,0.5)]">
             <Video className="h-6 md:h-7 w-6 md:w-7 text-accent-foreground drop-shadow-[0_0_6px_rgba(168,85,247,0.9)]" />
           </div>
           <div className="hidden md:flex absolute top-60 left-48 w-12 h-12 rounded-full bg-primary/45 backdrop-blur-lg items-center justify-center animate-float-mic border border-primary/40 shadow-[0_0_25px_rgba(59,130,246,0.5)]">

@@ -204,9 +204,9 @@ const AllSkills = () => {
           ) : (
             Object.entries(skillsByCategory).map(([category, skills]) => (
               <div key={category} className="mb-12">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-foreground">{category}</h2>
-                  <Badge variant="secondary" className="text-sm bg-primary/20 text-primary border-primary/30">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground min-w-0 break-words">{category}</h2>
+                  <Badge variant="secondary" className="text-sm shrink-0 bg-primary/20 text-primary border-primary/30">
                     {skills.length} skills
                   </Badge>
                 </div>

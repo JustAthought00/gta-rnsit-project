@@ -135,8 +135,8 @@ const CampusPulse = () => {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center shadow-glow shrink-0">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground leading-none">{value}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                 </div>
               </CardContent>
@@ -159,7 +159,7 @@ const CampusPulse = () => {
                   onClick={() => navigate(`/user/${c.userId}`)}
                 >
                   {c.bannerUrl && (
-                    <div className="absolute inset-y-0 right-0 w-2/3 overflow-hidden" aria-hidden>
+                    <div className="hidden sm:block absolute inset-y-0 right-0 w-2/3 overflow-hidden" aria-hidden>
                       <img
                         src={c.bannerUrl}
                         alt=""

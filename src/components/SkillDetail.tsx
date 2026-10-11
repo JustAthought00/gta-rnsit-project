@@ -388,16 +388,16 @@ const SkillDetail = () => {
         {dbSkill?.owner && (
           <Card className="crystal-card mb-6">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-14 w-14 border-2 border-primary/30">
+              <div className="flex flex-wrap items-center gap-4">
+                <Avatar className="h-14 w-14 border-2 border-primary/30 shrink-0">
                   <AvatarImage src={dbSkill.owner.avatar_url} />
                   <AvatarFallback className="bg-primary/20 text-primary">
                     {dbSkill.owner.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="flex-1 min-w-[170px]">
                   <p
-                    className="font-semibold text-foreground hover:text-primary cursor-pointer"
+                    className="font-semibold text-foreground hover:text-primary cursor-pointer truncate"
                     onClick={() => navigate(`/user/${dbSkill.user_id}`)}
                   >
                     {dbSkill.owner.full_name}
@@ -409,7 +409,7 @@ const SkillDetail = () => {
                   )}
                   {dbSkill.experience && <Badge variant="outline" className="mt-1 text-xs border-border">{dbSkill.experience}</Badge>}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   {dbSkill.hourly_rate && <Badge className="bg-accent/20 text-accent border-accent/30">₹{dbSkill.hourly_rate}/hr</Badge>}
                   {dbSkill.availability && <Badge variant="outline" className="border-border">{dbSkill.availability}</Badge>}
                 </div>

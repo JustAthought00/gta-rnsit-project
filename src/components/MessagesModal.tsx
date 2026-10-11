@@ -619,7 +619,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
           </div>
           
           {/* List */}
-          <ScrollArea className="h-[calc(100vh-250px)] md:h-[350px]">
+          <ScrollArea className="h-[calc(100dvh-250px)] md:h-[350px]">
             {activeTab === 'direct' ? (
               <div className="p-0">
                 {directConversations.length === 0 ? (

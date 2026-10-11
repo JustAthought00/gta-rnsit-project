@@ -321,7 +321,7 @@ const UserProfile = () => {
                   {profile.academic_year && (
                     <div className="flex items-center gap-1"><Calendar className="h-4 w-4" /><span className="text-sm">{profile.academic_year}</span></div>
                   )}
-                  <div className="flex items-center gap-1"><Mail className="h-4 w-4" /><span className="text-sm">{profile.email}</span></div>
+                  <div className="flex items-center gap-1 min-w-0"><Mail className="h-4 w-4 shrink-0" /><span className="text-sm break-all">{profile.email}</span></div>
                 </div>
                 
                 {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (

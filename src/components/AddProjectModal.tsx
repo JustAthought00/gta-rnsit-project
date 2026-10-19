@@ -68,12 +68,24 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, projectToEdit }: Add
       }
 
       setIsSearching(true);
-      const { data, error } = await supabase
+      const { data: { session } } = await supabase.auth.getSession();
+
+      let query = supabase
         .from('profiles')
         .select('user_id, full_name, department')
-        .not('user_id', 'in', collaborators.map(c => c.user_id))
         .ilike('full_name', `%${searchTerm}%`)
         .limit(8);
+
+      // Never suggest yourself (RLS rejects self-invites) or people already picked.
+      // NOTE: the exclusion list must be a parenthesized tuple for PostgREST
+      // (`user_id=not.in.(id1,id2)`); an empty or bare list produces a 400.
+      const excludeIds = collaborators.map(c => c.user_id);
+      if (session?.user) excludeIds.push(session.user.id);
+      if (excludeIds.length > 0) {
+        query = query.not('user_id', 'in', `(${excludeIds.join(',')})`);
+      }
+
+      const { data, error } = await query;
 
       if (!error && data) {
         setSearchResults(data);
@@ -152,7 +164,18 @@ const AddProjectModal = ({ isOpen, onClose, onProjectAdded, projectToEdit }: Add
       }));
       const { error: inviteError } = await supabase.from('project_collaborators').insert(invites);
       if (inviteError) {
-        toast.warning('Project saved but some invites failed to send');
+        // Batch is all-or-nothing; retry row by row so one bad row (e.g. an
+        // already-invited person) doesn't silently drop every valid invite.
+        const results = await Promise.all(
+          invites.map(invite => supabase.from('project_collaborators').insert(invite))
+        );
+        const failed = results.filter(r => r.error).length;
+        const sent = invites.length - failed;
+        if (sent === 0) {
+          toast.error('Invites failed to send: ' + inviteError.message);
+        } else {
+          toast.warning(`${sent} invite${sent > 1 ? 's' : ''} sent, ${failed} skipped (already invited)`);
+        }
       } else {
         toast.success(`${collaborators.length} invite${collaborators.length > 1 ? 's' : ''} sent!`);
       }

@@ -45,6 +45,18 @@ const emptyForm = {
   deadline: ''
 };
 
+// deadline is stored as timestamptz (UTC ISO from PostgREST) but the
+// datetime-local input reads/writes wall-clock LOCAL time. Naively slicing the
+// UTC string shifts the deadline by the timezone offset (and drifts again on
+// every save), so convert explicitly in both directions.
+const utcToLocalInput = (iso: string | null | undefined): string => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 const AddActivityModal = ({ isOpen, onClose, onActivityAdded, activityToEdit }: AddActivityModalProps) => {
   const isEditing = !!activityToEdit;
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +79,7 @@ const AddActivityModal = ({ isOpen, onClose, onActivityAdded, activityToEdit }: 
         organizerType: activityToEdit.organizer_type === 'group' ? 'group' : 'individual',
         groupName: activityToEdit.group_name || '',
         photoUrl: activityToEdit.photo_url || '',
-        deadline: activityToEdit.deadline ? activityToEdit.deadline.slice(0, 16) : ''
+        deadline: utcToLocalInput(activityToEdit.deadline)
       });
     } else {
       setFormData(emptyForm);
@@ -154,7 +166,13 @@ const AddActivityModal = ({ isOpen, onClose, onActivityAdded, activityToEdit }: 
       if (error) {
         toast.error(`Failed to ${isEditing ? 'update' : 'add'} activity: ` + error.message);
       } else {
-        toast.success(`Activity ${isEditing ? 'updated' : 'added'} successfully!`);
+        if (isEditing) {
+          toast.success('Activity updated successfully!');
+        } else if (isTeacher) {
+          toast.success('Activity published successfully!');
+        } else {
+          toast.success('Activity submitted! It stays visible to you as "Pending approval" and will appear publicly once a faculty member reviews it.');
+        }
         setFormData(emptyForm);
         onActivityAdded?.();
         onClose();

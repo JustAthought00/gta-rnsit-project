@@ -197,6 +197,24 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
     });
   };
 
+  // Reviews have no `read` column in the DB, so "seen" is persisted per-user in
+  // localStorage — otherwise every reload re-marked all historical reviews
+  // unread and the bell badge never cleared.
+  const seenNotifKey = userId ? `gta_seen_review_notifs_${userId}` : null;
+  const loadSeenReviewIds = (): Set<string> => {
+    if (!seenNotifKey) return new Set();
+    try {
+      return new Set(JSON.parse(localStorage.getItem(seenNotifKey) || '[]'));
+    } catch {
+      return new Set();
+    }
+  };
+  const persistSeenReviewIds = (ids: string[]) => {
+    if (!seenNotifKey) return;
+    const merged = new Set<string>([...loadSeenReviewIds(), ...ids]);
+    localStorage.setItem(seenNotifKey, JSON.stringify([...merged].slice(-500)));
+  };
+
   const loadNotifications = async () => {
     if (!userId) return;
 
@@ -353,6 +371,7 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
           .select('user_id, full_name')
           .in('user_id', [...new Set(myReviews.map((r) => r.user_id))]);
         const reviewerMap = new Map(reviewerProfiles?.map((p) => [p.user_id, p.full_name]));
+        const seenReviewIds = loadSeenReviewIds();
 
         for (const review of myReviews) {
           const isActivity = myActivities?.some((a) => a.id === review.target_id);
@@ -366,7 +385,7 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
             title: `New review on "${targetTitle}"`,
             description: `${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)} ${review.comment || ''}`.substring(0, 60),
             time: review.created_at,
-            read: false,
+            read: seenReviewIds.has(review.id),
           });
         }
       }
@@ -374,10 +393,12 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
 
     loaded.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
     setNotifications(loaded);
-    setUnreadCount(loaded.length);
+    setUnreadCount(loaded.filter(n => !n.read).length);
   };
 
   const markAllRead = async () => {
+    // Persist "seen" for review notifications (they have no DB read column).
+    persistSeenReviewIds(notifications.filter(n => n.type === 'review').map(n => n.id));
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
     if (!userId) return;
@@ -391,27 +412,40 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
   const handleAction = async (notif: Notification, outcome: 'accepted' | 'declined') => {
     if (!notif.actionType || !notif.relationId) return;
 
+    // 'declined' is only a legal status for project_collaborators; connections
+    // and community_members document 'rejected', and downstream code only
+    // understood one of the two — writes used to wedge accounts permanently.
+    const dbStatus = notif.actionType === 'invite'
+      ? outcome
+      : (outcome === 'accepted' ? 'accepted' : 'rejected');
+
     if (notif.actionType === 'connection') {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('connections')
-        .update({ status: outcome })
-        .eq('id', notif.relationId);
+        .update({ status: dbStatus })
+        .eq('id', notif.relationId)
+        .select('id');
       if (error) return toast.error('Action failed: ' + error.message);
+      if (!data || data.length === 0) return toast.error('Action failed: request no longer exists.');
       toast.success(outcome === 'accepted' ? 'Request accepted' : 'Request declined');
     } else if (notif.actionType === 'invite') {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('project_collaborators')
-        .update({ status: outcome, responded_at: new Date().toISOString() })
+        .update({ status: dbStatus, responded_at: new Date().toISOString() })
         .eq('id', notif.relationId)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select('id');
       if (error) return toast.error('Action failed: ' + error.message);
+      if (!data || data.length === 0) return toast.error('Action failed: only the invitee can respond.');
       toast.success(outcome === 'accepted' ? 'You joined the project!' : 'Invite declined');
     } else if (notif.actionType === 'community_request') {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('community_members')
-        .update({ status: outcome })
-        .eq('id', notif.relationId);
+        .update({ status: dbStatus })
+        .eq('id', notif.relationId)
+        .select('id');
       if (error) return toast.error('Action failed: ' + error.message);
+      if (!data || data.length === 0) return toast.error('Action failed: only community leads can respond.');
       toast.success(outcome === 'accepted' ? 'Member approved' : 'Request declined');
     }
 
@@ -421,13 +455,27 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
 
   const handleNotificationClick = (notif: Notification) => {
     if (notif.actionType) return; // buttons handle it
+    if (notif.type === 'review') {
+      // Mark review notifications as seen (no DB read column) — don't block
+      // interaction; clicking already marks it read locally.
+      const seenNotifKey = userId ? `gta_seen_review_notifs_${userId}` : null;
+      if (seenNotifKey && !notif.read) {
+        const seen = new Set<string>(JSON.parse(localStorage.getItem(seenNotifKey) || '[]'));
+        seen.add(notif.id);
+        localStorage.setItem(seenNotifKey, JSON.stringify([...seen].slice(-500)));
+      }
+    }
     if (notif.type === 'message' && notif.actorId) {
       const event = new CustomEvent('openMessages', { detail: { conversationUserId: notif.actorId } });
       window.dispatchEvent(event);
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - (notif.read ? 0 : 1)));
       setIsOpen(false);
+      return;
     }
+    // Default: mark as read locally
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - (notif.read ? 0 : 1)));
   };
 
   const formatTime = (timestamp: string) => {

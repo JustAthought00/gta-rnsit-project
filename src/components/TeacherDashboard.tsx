@@ -146,6 +146,15 @@ const TeacherDashboard = () => {
   };
 
   const setApproval = async (id: string, status: 'approved' | 'rejected') => {
+    if (status === 'approved') {
+      const row = pendingActivities.find(a => a.id === id);
+      if (row?.deadline && new Date(row.deadline).getTime() < Date.now()) {
+        const proceed = window.confirm(
+          `"${row.title}" has a registration deadline that already passed — approving it will still keep it hidden from every listing. Approve anyway?`
+        );
+        if (!proceed) return;
+      }
+    }
     const { error } = await supabase
       .from('activities')
       .update({ approval_status: status })

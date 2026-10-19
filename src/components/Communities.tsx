@@ -39,7 +39,7 @@ interface CommunityWithMeta {
   president?: { user_id: string; full_name: string } | null;
   vice_president?: { user_id: string; full_name: string } | null;
   member_count?: number;
-  myStatus?: 'pending' | 'accepted' | 'none';
+  myStatus?: 'pending' | 'accepted' | 'rejected' | 'none';
   isLead?: boolean;
   members?: { id: string; user_id: string; status: string; full_name: string }[];
   pendingRequests?: { id: string; user_id: string; full_name: string; joined_at: string }[];
@@ -125,7 +125,7 @@ const Communities = () => {
       const myStatusMap = new Map((memberships || []).map((m) => [m.community_id, m.status]));
 
       enriched.forEach(community => {
-        community.myStatus = (myStatusMap.get(community.id) || 'none') as 'none' | 'accepted' | 'pending';
+        community.myStatus = (myStatusMap.get(community.id) || 'none') as 'none' | 'accepted' | 'pending' | 'rejected';
       });
     }
 
@@ -178,16 +178,19 @@ const Communities = () => {
 
   const leaveCommunity = async (community: CommunityWithMeta) => {
     if (!currentUser || !community.id) return;
+    // Same row removal covers both leaving AND cancelling a pending request
+    // (the DELETE policy lets any user remove their own membership row).
+    const wasPending = community.myStatus === 'pending';
     const { error } = await supabase
       .from('community_members')
       .delete()
       .eq('community_id', community.id)
       .eq('user_id', currentUser.id);
     if (error) {
-      toast.error('Failed to leave: ' + error.message);
+      toast.error(wasPending ? 'Failed to cancel request: ' + error.message : 'Failed to leave: ' + error.message);
       return;
     }
-    toast.success('You left the community');
+    toast.success(wasPending ? 'Join request cancelled' : 'You left the community');
     loadCommunities();
   };
 
@@ -355,12 +358,17 @@ const Communities = () => {
                         </Button>
                       </>
                     ) : community.myStatus === 'pending' ? (
-                      <Button size="sm" variant="outline" disabled className="flex-1">
-                        <Clock className="h-4 w-4 mr-2" />Request Pending
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" disabled className="flex-1">
+                          <Clock className="h-4 w-4 mr-2" />Request Pending
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10" onClick={() => leaveCommunity(community)}>
+                          <X className="h-4 w-4 mr-2" />Cancel
+                        </Button>
+                      </>
                     ) : (
                       <Button size="sm" className="flex-1 plasma-button text-primary-foreground" onClick={() => requestJoin(community)}>
-                        <Send className="h-4 w-4 mr-2" />Request to Join
+                        <Send className="h-4 w-4 mr-2" />{community.myStatus === 'rejected' ? 'Request Again' : 'Request to Join'}
                       </Button>
                     )}
                     {community.members && community.members.length > 0 && community.myStatus === 'accepted' && (

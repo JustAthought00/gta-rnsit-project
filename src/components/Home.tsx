@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import MessagesModal from './MessagesModal';
@@ -254,23 +254,20 @@ const Home = () => {
       return;
     }
 
-    // Hide events pending approval and events past their registration deadline
-    const visible = (data || []).filter((a) => {
-      const approved = !a.approval_status || a.approval_status === 'approved';
-      const notExpired = !a.deadline || new Date(a.deadline).getTime() > Date.now();
-      return approved && notExpired;
-    }).slice(0, 6);
+    // Visibility (pending/expired filtering) is applied at render time so owners
+    // can still see their own events that await faculty approval.
+    const rows = data || [];
 
     // Fetch profile names for each activity
-    if (visible.length > 0) {
-      const userIds = [...new Set(visible.map(a => a.user_id))];
+    if (rows.length > 0) {
+      const userIds = [...new Set(rows.map(a => a.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, full_name, avatar_url')
         .in('user_id', userIds);
       
       const profileMap = new Map(profiles?.map(p => [p.user_id, { name: p.full_name, avatar: p.avatar_url }]) || []);
-      const activitiesWithNames = visible.map(activity => ({
+      const activitiesWithNames = rows.map(activity => ({
         ...activity,
         host_name: activity.organizer_type === 'group'
           ? (activity.group_name || 'Unknown')
@@ -284,6 +281,19 @@ const Home = () => {
       setDbActivities([]);
     }
   };
+
+  // Public visitors see only approved, non-expired events. The owner additionally
+  // sees their own pending events (badged) so new submissions don't vanish.
+  const visibleActivities = useMemo(() => {
+    const now = Date.now();
+    return dbActivities.filter((a) => {
+      const isOwn = !!user && a.user_id === user.id;
+      const approved = !a.approval_status || a.approval_status === 'approved' ||
+        (isOwn && a.approval_status === 'pending');
+      const notExpired = !a.deadline || new Date(a.deadline).getTime() > now || isOwn;
+      return approved && notExpired;
+    }).slice(0, 6);
+  }, [dbActivities, user]);
 
   const skillsRowRef = useRef<HTMLDivElement | null>(null);
   const activitiesRowRef = useRef<HTMLDivElement | null>(null);
@@ -1020,13 +1030,13 @@ className="crystal-card cursor-pointer"
             </div>
           </div>
           
-          {dbActivities.length > 0 ? (
+          {visibleActivities.length > 0 ? (
             <div
               ref={activitiesRowRef}
               {...activitiesDrag.handlers}
               className={`relative z-10 flex gap-5 md:gap-6 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory pb-2 no-scrollbar carousel-fade-x ${activitiesDrag.handlers.className}`}
             >
-              {dbActivities.slice(0, 6).map((activity) => (
+              {visibleActivities.map((activity) => (
                 <Card
                   key={activity.id}
                   className="crystal-card group transition-all duration-300 cursor-pointer overflow-hidden w-[300px] md:w-[360px] shrink-0 snap-start"
@@ -1043,9 +1053,16 @@ className="crystal-card cursor-pointer"
                     ) : (
                       <Calendar className="h-12 w-12 md:h-14 md:w-14 text-primary/70 group-hover:scale-110 transition-all duration-300" />
                     )}
-                    <Badge className="absolute top-2.5 right-2.5 text-xs bg-accent/20 text-accent border-accent/30 px-2.5 py-0.5 hover:bg-accent/20 hover:text-accent">
-                      {activity.category}
-                    </Badge>
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                      {activity.approval_status === 'pending' && (
+                        <Badge className="text-xs bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40 px-2.5 py-0.5">
+                          Pending approval
+                        </Badge>
+                      )}
+                      <Badge className="text-xs bg-accent/20 text-accent border-accent/30 px-2.5 py-0.5 hover:bg-accent/20 hover:text-accent">
+                        {activity.category}
+                      </Badge>
+                    </div>
                   </div>
                   <CardHeader className="relative z-10 pb-2 pt-4">
                     <CardTitle className="text-lg md:text-xl mb-1 text-foreground">{activity.title}</CardTitle>

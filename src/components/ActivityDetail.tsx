@@ -626,6 +626,7 @@ const ActivityDetail = () => {
             organizer_type: dbActivity.organizer_type,
             group_name: dbActivity.group_name,
             photo_url: dbActivity.photo_url,
+            deadline: dbActivity.deadline,
           }}
         />
       )}

@@ -44,6 +44,7 @@ interface Activity {
   date: string | null;
   time: string | null;
   venue: string | null;
+  approval_status?: string | null;
 }
 
 interface Project {
@@ -103,6 +104,14 @@ const UserProfile = () => {
       .maybeSingle();
 
     if (!profileData) {
+      // Clear everything — otherwise navigating from profile A to a bad id
+      // kept rendering A's data under B's URL.
+      setProfile(null);
+      setSkills([]);
+      setActivities([]);
+      setProjects([]);
+      setCollaborations([]);
+      setPendingInvites([]);
       setLoading(false);
       return;
     }
@@ -157,14 +166,21 @@ const UserProfile = () => {
   };
 
   const respondToInvite = async (inviteId: string, status: 'accepted' | 'declined') => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('project_collaborators')
       .update({ status, responded_at: new Date().toISOString() })
       .eq('id', inviteId)
-      .eq('user_id', currentUser?.id);
+      .eq('user_id', currentUser?.id)
+      .select('id');
 
     if (error) {
       toast.error('Failed to respond: ' + error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      // RLS-blocked updates match 0 rows without raising an error in PostgREST,
+      // so success must be proven by an affected row — otherwise the toast lied.
+      toast.error('Failed to respond: only the invitee can accept or decline.');
       return;
     }
     toast.success(status === 'accepted' ? 'You joined the project!' : 'Invite declined');
@@ -182,36 +198,68 @@ const UserProfile = () => {
       return;
     }
 
-    // Ensure connection exists
-    const { data: existingConn } = await supabase
+    // Ensure connection exists (the pair is guaranteed unique by a DB index,
+    // so limit(1) is always exactly one row or none).
+    const { data: existingConn, error: connLookupError } = await supabase
       .from('connections')
       .select('*')
       .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`)
-      .maybeSingle();
+      .limit(1);
 
-    let status = existingConn?.status || 'none';
-    if (!existingConn) {
-      await supabase.from('connections').insert({
+    if (connLookupError) {
+      toast.error('Failed to check connection status');
+      return;
+    }
+
+    const conn = existingConn && existingConn.length > 0 ? existingConn[0] : null;
+    let status = conn?.status || 'none';
+
+    if (!conn) {
+      const { error: insertError } = await supabase.from('connections').insert({
         sender_id: currentUser.id,
         receiver_id: userId,
         status: 'pending'
       });
+      if (insertError) {
+        toast.error('Failed to send connection request: ' + insertError.message);
+        return;
+      }
+      status = 'pending';
+    } else if (conn.status === 'rejected' || conn.status === 'declined') {
+      // They declined earlier. The pair keeps ONE row (unique index), so
+      // re-requesting resets it instead of dead-ending forever.
+      const { error: resetError } = await supabase
+        .from('connections')
+        .update({ status: 'pending', sender_id: currentUser.id, receiver_id: userId })
+        .eq('id', conn.id);
+      if (resetError) {
+        toast.error('Failed to resend connection request: ' + resetError.message);
+        return;
+      }
       status = 'pending';
     }
 
     if (status === 'pending') {
       // If I'm the receiver of their request, I can reply right away.
-      const isTheirRequest = existingConn?.sender_id === userId;
+      const isTheirRequest = conn?.sender_id === userId;
       if (!isTheirRequest) {
+        // Send the greeting ALONGSIDE the request: a bare connection row gave
+        // the receiver a nameless request, and after they accepted there was
+        // still no conversation until the sender clicked Message a 2nd time.
+        const { error: greetError } = await supabase.from('messages').insert({
+          sender_id: currentUser.id,
+          receiver_id: userId,
+          content: `👋 Hi ${profile?.full_name?.split(' ')[0]}! I'd like to connect with you.`
+        });
+        if (greetError) {
+          toast.error('Failed to start conversation');
+          return;
+        }
         toast.success('Connection request sent. You can chat once they accept.');
+        window.dispatchEvent(new CustomEvent('openMessages', { detail: { conversationUserId: userId } }));
         setShowMessagesModal(true);
         return;
       }
-    }
-    if (status === 'rejected') {
-      toast.error("You can't message this person right now.");
-      setShowMessagesModal(true);
-      return;
     }
 
     const { error } = await supabase.from('messages').insert({
@@ -265,6 +313,14 @@ const UserProfile = () => {
   }
 
   const isOwnProfile = currentUser?.id === userId;
+
+  // Pending/rejected events are moderation-invisible to the public: only the
+  // owner sees their own unapproved submissions (badged), matching Home/AllActivities.
+  const visibleActivities = activities.filter((activity) =>
+    isOwnProfile ||
+    !activity.approval_status ||
+    activity.approval_status === 'approved'
+  );
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -321,7 +377,9 @@ const UserProfile = () => {
                   {profile.academic_year && (
                     <div className="flex items-center gap-1"><Calendar className="h-4 w-4" /><span className="text-sm">{profile.academic_year}</span></div>
                   )}
-                  <div className="flex items-center gap-1 min-w-0"><Mail className="h-4 w-4 shrink-0" /><span className="text-sm break-all">{profile.email}</span></div>
+                  {isOwnProfile && (
+                    <div className="flex items-center gap-1 min-w-0"><Mail className="h-4 w-4 shrink-0" /><span className="text-sm break-all">{profile.email}</span></div>
+                  )}
                 </div>
                 
                 {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
@@ -354,7 +412,7 @@ const UserProfile = () => {
           </CardContent>
         </Card>
 
-        {pendingInvites.length > 0 && (
+        {isOwnProfile && pendingInvites.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />Project Invites
@@ -489,16 +547,28 @@ const UserProfile = () => {
           </div>
         )}
 
-        {activities.length > 0 && (
+        {visibleActivities.length > 0 && (
           <div>
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-accent" />Activities & Events
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activities.map((activity) => (
+              {visibleActivities.map((activity) => (
                 <Card key={activity.id} className="crystal-card hover:border-accent/30 transition-all cursor-pointer" onClick={() => navigate(`/activity/${activity.id}`)}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-foreground">{activity.title}</CardTitle>
+                    <CardTitle className="text-lg text-foreground flex items-center gap-2">
+                      {activity.title}
+                      {activity.approval_status === 'pending' && (
+                        <Badge className="text-xs bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40 shrink-0">
+                          Pending approval
+                        </Badge>
+                      )}
+                      {activity.approval_status === 'rejected' && (
+                        <Badge className="text-xs bg-destructive/20 text-destructive border-destructive/40 shrink-0">
+                          Not approved
+                        </Badge>
+                      )}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{activity.description || 'No description'}</p>
@@ -513,7 +583,7 @@ const UserProfile = () => {
           </div>
         )}
 
-        {skills.length === 0 && activities.length === 0 && projects.length === 0 && collaborations.length === 0 && (
+        {skills.length === 0 && visibleActivities.length === 0 && projects.length === 0 && collaborations.length === 0 && (
           <Card className="crystal-card">
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">This user hasn't added any skills or activities yet.</p>

@@ -41,13 +41,17 @@ const Auth = () => {
   // Prevents the auth listener from auto-redirecting right after a password
   // reset completes (the recovery session can still be briefly live).
   const passwordResetDone = useRef(false);
+  // Set while a signup is intentionally signing its auto-created session back
+  // out: the SIGNED_IN event from signUp must not bounce the user into the app
+  // before the "check your email" verification screen is shown.
+  const suppressAuthRedirect = useRef(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setViewMode('reset_password');
         toast.info('Password recovery link verified. Please set your new password.');
-      } else if (session?.user && viewMode !== 'reset_password' && !passwordResetDone.current) {
+      } else if (session?.user && !suppressAuthRedirect.current && viewMode !== 'reset_password' && !passwordResetDone.current) {
         navigate(next);
       }
     });
@@ -118,6 +122,7 @@ const Auth = () => {
     }
 
     try {
+      suppressAuthRedirect.current = true;
       const { data, error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
@@ -156,6 +161,7 @@ const Auth = () => {
     } catch (error) {
       toast.error('An unexpected error occurred');
     } finally {
+      suppressAuthRedirect.current = false;
       setIsLoading(false);
     }
   };

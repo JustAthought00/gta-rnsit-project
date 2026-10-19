@@ -131,22 +131,26 @@ const SkillDetail = () => {
       toast.error('Please sign in to bookmark');
       return;
     }
-    if (isBookmarked) {
-      await supabase.from('bookmarks').delete()
-        .eq('user_id', currentUser.id)
-        .eq('target_id', skillId)
-        .eq('target_type', 'skill');
-      setIsBookmarked(false);
-      toast.success('Bookmark removed');
-    } else {
-      await supabase.from('bookmarks').insert({
-        user_id: currentUser.id,
-        target_id: skillId,
-        target_type: 'skill',
-      });
-      setIsBookmarked(true);
-      toast.success('Bookmarked!');
+    // Optimistic flip, reverted on failure — errors used to be swallowed, so a
+    // rejected write still toasted "Bookmarked!" while state disagreed with DB.
+    const wasBookmarked = isBookmarked;
+    setIsBookmarked(!wasBookmarked);
+    const { error } = wasBookmarked
+      ? await supabase.from('bookmarks').delete()
+          .eq('user_id', currentUser.id)
+          .eq('target_id', skillId)
+          .eq('target_type', 'skill')
+      : await supabase.from('bookmarks').insert({
+          user_id: currentUser.id,
+          target_id: skillId,
+          target_type: 'skill',
+        });
+    if (error) {
+      setIsBookmarked(wasBookmarked); // revert optimistic flip
+      toast.error('Failed to update bookmark: ' + error.message);
+      return;
     }
+    toast.success(wasBookmarked ? 'Bookmark removed' : 'Bookmarked!');
   };
 
   const submitReview = async () => {
@@ -276,6 +280,95 @@ const SkillDetail = () => {
     setSubmittingRequest(false);
   };
 
+  // Mirrors UserProfile.handleMessage: first contact with the skill owner must
+  // create BOTH a connection request and a greeting message. The old behavior
+  // (just opening the bare MessagesModal) showed an empty inbox to the student
+  // and delivered nothing to the owner — the entire contact affordance was dead.
+  const handleMessageOwner = async () => {
+    if (!currentUser || !dbSkill) {
+      toast.error('Please sign in to message the owner');
+      return;
+    }
+    if (currentUser.id === dbSkill.user_id) {
+      toast.error("You can't message yourself");
+      return;
+    }
+
+    const ownerId = dbSkill.user_id;
+    const ownerName = dbSkill.owner?.full_name?.split(' ')[0] || 'the owner';
+    const greeting = `👋 Hi! I'm interested in your "${dbSkill.title}" skill.`;
+
+    // The pair is guaranteed unique by a DB index, so limit(1) is at most one row.
+    const { data: existingConn, error: connLookupError } = await supabase
+      .from('connections')
+      .select('*')
+      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${ownerId}),and(sender_id.eq.${ownerId},receiver_id.eq.${currentUser.id})`)
+      .limit(1);
+    if (connLookupError) {
+      toast.error('Failed to check connection status');
+      return;
+    }
+
+    const conn = existingConn && existingConn.length > 0 ? existingConn[0] : null;
+    let status = conn?.status || 'none';
+
+    if (!conn) {
+      const { error } = await supabase.from('connections').insert({
+        sender_id: currentUser.id,
+        receiver_id: ownerId,
+        status: 'pending',
+      });
+      if (error) {
+        toast.error('Failed to send connection request: ' + error.message);
+        return;
+      }
+      status = 'pending';
+    } else if (conn.status === 'rejected' || conn.status === 'declined') {
+      // Declined earlier — the pair keeps ONE row (unique index), reset to pending.
+      const { error } = await supabase
+        .from('connections')
+        .update({ status: 'pending', sender_id: currentUser.id, receiver_id: ownerId })
+        .eq('id', conn.id);
+      if (error) {
+        toast.error('Failed to resend connection request: ' + error.message);
+        return;
+      }
+      status = 'pending';
+    }
+
+    if (status === 'pending') {
+      // Only block when the OWNER is the one waiting on MY request.
+      const isTheirRequest = conn?.sender_id === ownerId;
+      if (!isTheirRequest) {
+        const { error } = await supabase.from('messages').insert({
+          sender_id: currentUser.id,
+          receiver_id: ownerId,
+          content: greeting,
+        });
+        if (error) {
+          toast.error('Failed to start conversation');
+          return;
+        }
+        toast.success(`Connection request sent to ${ownerName}. You can chat once they accept.`);
+        window.dispatchEvent(new CustomEvent('openMessages', { detail: { conversationUserId: ownerId } }));
+        setShowMessagesModal(true);
+        return;
+      }
+    }
+
+    const { error } = await supabase.from('messages').insert({
+      sender_id: currentUser.id,
+      receiver_id: ownerId,
+      content: greeting,
+    });
+    if (error) {
+      toast.error('Failed to start conversation');
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('openMessages', { detail: { conversationUserId: ownerId } }));
+    setShowMessagesModal(true);
+  };
+
   const cancelRequest = async () => {
     if (!myRequest) return;
     const { error } = await supabase.from('skill_requests').delete().eq('id', myRequest.id);
@@ -288,9 +381,13 @@ const SkillDetail = () => {
   };
 
   const respondToRequest = async (requestId: string, status: 'accepted' | 'declined') => {
-    const { error } = await supabase.from('skill_requests').update({ status }).eq('id', requestId);
+    const { data, error } = await supabase.from('skill_requests').update({ status }).eq('id', requestId).select('id');
     if (error) {
       toast.error('Failed to update request');
+    } else if (!data || data.length === 0) {
+      // RLS-blocked updates match 0 rows without raising an error in
+      // PostgREST — success must be proven by an affected row.
+      toast.error('Failed to update request: only the skill owner can respond.');
     } else {
       toast.success(status === 'accepted' ? 'Request accepted' : 'Request declined');
       fetchRequests();
@@ -428,7 +525,7 @@ const SkillDetail = () => {
                     <Send className="h-4 w-4 mr-2" />
                     Request this Skill
                   </Button>
-                  <Button variant="outline" className="border-primary/40 w-full sm:w-auto" onClick={() => setShowMessagesModal(true)}>
+                  <Button variant="outline" className="border-primary/40 w-full sm:w-auto" onClick={handleMessageOwner}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Message
                   </Button>
@@ -469,7 +566,7 @@ const SkillDetail = () => {
                   <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
                     <Check className="h-3 w-3 mr-1" /> Request accepted
                   </Badge>
-                  <Button variant="outline" className="border-primary/40" onClick={() => setShowMessagesModal(true)}>
+                  <Button variant="outline" className="border-primary/40" onClick={handleMessageOwner}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Message to coordinate
                   </Button>

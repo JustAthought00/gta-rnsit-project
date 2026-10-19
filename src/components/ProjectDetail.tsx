@@ -335,7 +335,18 @@ const ProjectDetail = () => {
                               )}
                             </div>
                             {isOwner && (
-                              <Button variant="ghost" size="sm" className="p-1 text-muted-foreground hover:text-destructive" onClick={() => revokeInvite(invite.id)}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 text-muted-foreground hover:text-destructive"
+                                onClick={(e) => {
+                                  // Nested inside the profile Link — stop the
+                                  // navigation so removal doesn't bounce off-page.
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  revokeInvite(invite.id);
+                                }}
+                              >
                                 <X className="h-4 w-4" />
                               </Button>
                             )}

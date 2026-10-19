@@ -30,10 +30,14 @@ const AllActivities = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [dbActivities, setDbActivities] = useState<(Tables<'activities'> & { host_name: string | null; host_avatar: string | null })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Load activities from database — all events on this page are real
   useEffect(() => {
     const fetchActivities = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUserId(session?.user?.id ?? null);
+
       const { data, error } = await supabase
         .from('activities')
         .select('*')
@@ -47,20 +51,14 @@ const AllActivities = () => {
 
       // Fetch profile names for each activity
       if (data && data.length > 0) {
-        // Only show approved activities that haven't passed their deadline yet
-        const now = Date.now();
-        const visible = data.filter(a =>
-          (a.approval_status === null || a.approval_status === 'approved') &&
-          (!a.deadline || new Date(a.deadline).getTime() > now)
-        );
-        const userIds = [...new Set(visible.map(a => a.user_id))];
+        const userIds = [...new Set(data.map(a => a.user_id))];
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url')
           .in('user_id', userIds);
 
         const profileMap = new Map(profiles?.map(p => [p.user_id, { name: p.full_name, avatar: p.avatar_url }]) || []);
-        const activitiesWithNames = visible.map(activity => ({
+        const activitiesWithNames = data.map(activity => ({
           ...activity,
           host_name: activity.organizer_type === 'group'
             ? (activity.group_name || 'Unknown')
@@ -78,13 +76,19 @@ const AllActivities = () => {
     fetchActivities();
   }, []);
 
-  // Filter activities based on search term and category
+  // Filter activities based on search term and category.
+  // Public visitors only see approved, non-expired events; the owner additionally
+  // sees their own pending submissions (badged) so they don't appear to vanish.
   const filteredActivities = dbActivities.filter(activity => {
+    const isOwn = !!userId && activity.user_id === userId;
+    const isVisible = (!activity.approval_status || activity.approval_status === 'approved' ||
+                       (isOwn && activity.approval_status === 'pending')) &&
+                      (!activity.deadline || new Date(activity.deadline).getTime() > Date.now() || isOwn);
     const matchesSearch = (activity.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (activity.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (activity.venue || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || activity.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return isVisible && matchesSearch && matchesCategory;
   });
 
   const handleActivityClick = (activityId: string) => {
@@ -188,9 +192,16 @@ const AllActivities = () => {
                       ) : (
                         <IconComponent className="h-10 w-10 text-primary/70 group-hover:scale-110 transition-all duration-300" />
                       )}
-                      <Badge className="absolute top-3 right-3 text-xs bg-accent/20 text-accent border-accent/30 hover:bg-accent/20 hover:text-accent">
-                        {activity.category}
-                      </Badge>
+                      <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                        {activity.approval_status === 'pending' && (
+                          <Badge className="text-xs bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40">
+                            Pending approval
+                          </Badge>
+                        )}
+                        <Badge className="text-xs bg-accent/20 text-accent border-accent/30 hover:bg-accent/20 hover:text-accent">
+                          {activity.category}
+                        </Badge>
+                      </div>
                     </div>
                     <CardHeader className="relative z-10">
                       <CardTitle className="text-lg text-foreground">{activity.title}</CardTitle>

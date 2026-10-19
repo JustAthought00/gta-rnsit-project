@@ -39,16 +39,16 @@ const CampusPulse = () => {
 
       // banner_url only exists once the profile_banners migration is applied; if the
       // query fails (column missing on the live DB) retry without it.
-      let profiles: { user_id: string; full_name: string; avatar_url: string | null; banner_url?: string | null }[] = [];
+      let profiles: { user_id: string; full_name: string; avatar_url: string | null; banner_url?: string | null; role?: string | null }[] = [];
       const { data: profilesWithBanner, error } = await supabase
         .from('profiles')
-        .select('user_id, full_name, avatar_url, banner_url');
+        .select('user_id, full_name, avatar_url, banner_url, role');
       if (!error) {
         profiles = profilesWithBanner || [];
       } else {
         const { data: fallback } = await supabase
           .from('profiles')
-          .select('user_id, full_name, avatar_url');
+          .select('user_id, full_name, avatar_url, role');
         profiles = fallback || [];
       }
       const skills = skillsRes.data || [];
@@ -63,7 +63,8 @@ const CampusPulse = () => {
       );
 
       setStats({
-        students: profiles.length,
+        // Faculty accounts run the platform; the "Students" tile counts students.
+        students: profiles.filter(p => p.role !== 'teacher').length,
         skills: skills.length,
         events: activities.length,
         reviews: reviews.length,

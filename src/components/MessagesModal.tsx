@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, MessageCircle, Send, Phone, Video, Info, Search, ArrowLeft, Users as UsersIcon, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,6 +74,13 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Mirror the open thread into refs so the realtime subscription (registered
+  // once per modal open) always appends to the thread currently on screen.
+  const selectedConversationRef = useRef(selectedConversation);
+  const selectedCommunityRef = useRef(selectedCommunity);
+  useEffect(() => { selectedConversationRef.current = selectedConversation; }, [selectedConversation]);
+  useEffect(() => { selectedCommunityRef.current = selectedCommunity; }, [selectedCommunity]);
+
   useEffect(() => {
     if (isOpen && currentUser) {
       loadConversations();
@@ -84,12 +91,22 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     }
   }, [isOpen, currentUser]);
 
-  // Listen for openMessages event from notifications
+  // Listen for openMessages event from notifications.
+  // This effect MUST depend on currentUser: with the old mount-only effect the
+  // handler kept the first-render closure where currentUser was null, so
+  // loadMessages() was a permanent no-op and deep-links opened an empty (or
+  // worse, another person's) thread.
   useEffect(() => {
     const handleOpenMessages = (event: CustomEvent) => {
       if (event.detail?.conversationUserId) {
-        setSelectedConversation(event.detail.conversationUserId);
-        loadMessages(event.detail.conversationUserId);
+        const otherUserId = event.detail.conversationUserId as string;
+        // A deep-linked DM must not post into (or be blocked by) whatever
+        // community/direct thread happened to be open before.
+        setActiveTab('direct');
+        setSelectedCommunity(null);
+        setCommunityMessages([]);
+        setSelectedConversation(otherUserId);
+        loadMessages(otherUserId);
       }
     };
 
@@ -97,7 +114,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     return () => {
       window.removeEventListener('openMessages', handleOpenMessages as EventListener);
     };
-  }, []);
+  }, [currentUser]);
 
   // Search for users
   useEffect(() => {
@@ -125,7 +142,10 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     return () => clearTimeout(debounce);
   }, [userSearchTerm, currentUser]);
 
-  // Set up realtime subscription for messages
+  // Realtime: DMs AND community group chat update live (community_messages is
+  // in the supabase_realtime publication but nothing listened to it before, so
+  // group chats only refreshed when you sent a message yourself). Appends are
+  // deduped by id because sendMessage() also refetches after inserting.
   useEffect(() => {
     if (!isOpen || !currentUser) return;
 
@@ -141,14 +161,36 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
         (payload) => {
           const newMsg = payload.new as Message;
           if (newMsg.sender_id === currentUser.id || newMsg.receiver_id === currentUser.id) {
-            if (selectedConversation) {
-              const convUserId = selectedConversation;
-              if (newMsg.sender_id === convUserId || newMsg.receiver_id === convUserId) {
-                setMessages(prev => [...prev, newMsg]);
-              }
+            const convUserId = selectedConversationRef.current;
+            if (convUserId && (newMsg.sender_id === convUserId || newMsg.receiver_id === convUserId)) {
+              setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
             }
             loadConversations();
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'community_messages',
+        },
+        async (payload) => {
+          const newMsg = payload.new as CommunityMessage;
+          if (!newMsg.community_id || newMsg.community_id !== selectedCommunityRef.current) return;
+          let senderName = newMsg.sender_name;
+          if (!senderName) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', newMsg.sender_id)
+              .maybeSingle();
+            senderName = data?.full_name || 'Unknown';
+          }
+          setCommunityMessages(prev =>
+            prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, sender_name: senderName }]
+          );
         }
       )
       .subscribe();
@@ -156,7 +198,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isOpen, currentUser, selectedConversation]);
+  }, [isOpen, currentUser]);
 
   const loadConversations = async () => {
     if (!currentUser) return;
@@ -338,7 +380,9 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
 
     if (!existingConn) return 'none';
     if (existingConn.status === 'accepted') return 'accepted';
-    if (existingConn.status === 'rejected') return 'rejected';
+    // 'declined' is a legacy value some rows were written with before
+    // normalization; treat it exactly like 'rejected'.
+    if (existingConn.status === 'rejected' || existingConn.status === 'declined') return 'rejected';
     // For pending requests, the receiver can reply to the person who reached out.
     return existingConn.sender_id === otherUserId ? 'accepted' : 'pending';
   };
@@ -346,7 +390,10 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUser) return;
 
-    if ((activeTab === 'direct' || activeTab === 'requests') && selectedConversation) {
+    // Gate on the thread that is actually DISPLAYED (selectedConversation wins,
+    // matching the render) — gating on activeTab silently dropped messages or
+    // posted into a stale community thread after a notification deep-link.
+    if (selectedConversation) {
       const status = await getConnectionStatus(selectedConversation);
 
       if (status !== 'accepted') {
@@ -369,7 +416,7 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
 
       setNewMessage('');
       loadMessages(selectedConversation);
-    } else if (activeTab === 'communities' && selectedCommunity) {
+    } else if (selectedCommunity) {
       const { error } = await supabase
         .from('community_messages')
         .insert({
@@ -391,24 +438,57 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
   const startNewConversation = async (user: UserSearchResult) => {
     const status = await getConnectionStatus(user.user_id);
 
+    if (status === 'accepted') {
+      toast.success(`Opening chat with ${user.full_name}...`);
+      setShowNewConversation(false);
+      setUserSearchTerm('');
+      setSearchResults([]);
+      setActiveTab('direct');
+      setSelectedConversation(user.user_id);
+      loadMessages(user.user_id);
+      loadConversations();
+      return;
+    }
+
+    if (status === 'pending') {
+      toast.info(`${user.full_name} hasn't responded to your connection request yet.`);
+      setShowNewConversation(false);
+      setUserSearchTerm('');
+      setSearchResults([]);
+      loadConversations();
+      return;
+    }
+
     if (status === 'none') {
       // Send a connection request instead of a message; the chat opens only
       // once the other person accepts.
-      await supabase.from('connections').insert({
+      const { error } = await supabase.from('connections').insert({
         sender_id: currentUser.id,
         receiver_id: user.user_id,
         status: 'pending'
       });
+      if (error) {
+        toast.error('Failed to send connection request: ' + error.message);
+        return;
+      }
+      toast.success(`Connection request sent to ${user.full_name}. You can chat once they accept.`);
+    } else {
+      // status === 'rejected' — they declined earlier; the pair keeps ONE row
+      // (enforced by a unique index), so re-requesting resets it to pending.
+      const { error } = await supabase
+        .from('connections')
+        .update({ status: 'pending', sender_id: currentUser.id, receiver_id: user.user_id })
+        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.user_id}),and(sender_id.eq.${user.user_id},receiver_id.eq.${currentUser.id})`);
+      if (error) {
+        toast.error('Failed to resend connection request: ' + error.message);
+        return;
+      }
+      toast.success(`Connection request re-sent to ${user.full_name}.`);
     }
 
-    toast.success(`Connection request sent to ${user.full_name}. You can chat once they accept.`);
     setShowNewConversation(false);
     setUserSearchTerm('');
     setSearchResults([]);
-    if (status === 'accepted') {
-      setSelectedConversation(user.user_id);
-      loadMessages(user.user_id);
-    }
     loadConversations();
   };
 
@@ -727,6 +807,11 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                     <div
                       key={community.id}
                       onClick={() => {
+                        // Clear any open DM first: the render prioritizes
+                        // selectedConversation, so a lingering DM selection
+                        // would keep showing the old thread over the group chat.
+                        setSelectedConversation(null);
+                        setMessages([]);
                         setSelectedCommunity(community.id);
                         loadCommunityMessages(community.id);
                       }}

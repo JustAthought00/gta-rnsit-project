@@ -252,14 +252,27 @@ const EditProfile = () => {
         experience: experience || null,
         cabin_location: cabinLocation || null,
       };
-      const { error: teacherError } = teacherEntry
-        ? await supabase.from('teachers').update(teacherPayload).eq('user_id', userId)
-        : await supabase.from('teachers').insert(teacherPayload);
-      if (teacherError && !teacherEntry) {
-        toast.error('Failed to create faculty directory entry: ' + teacherError.message);
+      const { data: savedEntry, error: teacherError } = teacherEntry
+        ? await supabase.from('teachers').update(teacherPayload).eq('user_id', userId).select().maybeSingle()
+        : await supabase.from('teachers').insert(teacherPayload).select().maybeSingle();
+      if (teacherError) {
+        toast.error(`Failed to ${teacherEntry ? 'update' : 'create'} faculty directory entry: ` + teacherError.message);
         setSaving(false);
         return;
       }
+      // Remember the row so the next save takes the update path — teachers.user_id
+      // is UNIQUE, so re-inserting would fail forever without this.
+      if (!teacherEntry && savedEntry) setTeacherEntry(savedEntry);
+    } else if (teacherEntry) {
+      // Role switched Faculty → Student: drop the directory entry so the user
+      // doesn't stay publicly listed at /teachers as faculty.
+      const { error: removeError } = await supabase.from('teachers').delete().eq('user_id', userId);
+      if (removeError) {
+        toast.error('Profile saved, but your faculty directory entry could not be removed: ' + removeError.message);
+        setSaving(false);
+        return;
+      }
+      setTeacherEntry(null);
     }
 
     toast.success('Profile updated!');

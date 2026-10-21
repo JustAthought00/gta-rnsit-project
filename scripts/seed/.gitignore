@@ -1,0 +1,13 @@
+# Local secrets (service-role key, anon key, demo password) — never commit
+.env
+.env.*
+!.env.example
+
+# Generated credential handover sheet — contains the shared demo password
+credentials.md
+
+# Manifest of seeder-owned auth accounts (used to purge stale demo users)
+.seeded_emails.json
+
+__pycache__/
+*.pyc

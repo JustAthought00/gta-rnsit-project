@@ -1001,6 +1001,18 @@ def seed_activities(students, teachers, ids):
         if offset > 0 and RNG.random() < 0.18:
             approval = "pending"
 
+        # The open house is the event this platform gets demoed at, so it is
+        # pinned to tomorrow and always approved - it must never read as a
+        # stale past event or sit in the approval queue.
+        if title == "Open House: Meet the Departments":
+            offset = 1
+            day = (datetime.now(IST) + timedelta(days=offset)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            hour, minute = 11, 30
+            deadline = ist_midnight(day) - timedelta(hours=6)
+            approval = "approved"
+
         rows.append(
             {
                 "user_id": uid,

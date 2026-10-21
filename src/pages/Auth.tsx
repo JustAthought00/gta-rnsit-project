@@ -41,9 +41,9 @@ const Auth = () => {
   // Prevents the auth listener from auto-redirecting right after a password
   // reset completes (the recovery session can still be briefly live).
   const passwordResetDone = useRef(false);
-  // Set while a signup is intentionally signing its auto-created session back
-  // out: the SIGNED_IN event from signUp must not bounce the user into the app
-  // before the "check your email" verification screen is shown.
+  // Set while a signup is in flight: the SIGNED_IN event that signUp emits
+  // must not bounce the user into the app before the signup handler has
+  // decided what to show.
   const suppressAuthRedirect = useRef(false);
 
   useEffect(() => {
@@ -146,12 +146,12 @@ const Auth = () => {
         setVerifyMode('signup');
         setSentVerificationEmail(signUpData.email);
         if (data.session) {
-          // Email confirmations are off in Supabase, so signUp returns a
-          // session immediately. Sign it out and force the verification step
-          // so every account is confirmed before it can be used.
-          await supabase.auth.signOut();
-          setViewMode('verify_sent');
-          toast.success('Verification link sent to your RNSIT email!');
+          // Email confirmations are disabled in Supabase, so signUp returns a
+          // session immediately and the account is already usable. Sign the
+          // visitor straight in - showing a "check your email" screen for a
+          // mail this project never actually sends would strand them.
+          toast.success('Account created - welcome to GTA!');
+          navigate(next);
         } else {
           // Email confirmation required
           setViewMode('verify_sent');

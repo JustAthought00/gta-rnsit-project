@@ -464,11 +464,11 @@ const Home = () => {
       
       {/* Header */}
       <header className="glass-header sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 md:py-4">
+        <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Zap className="h-7 w-7 md:h-9 md:w-9 text-primary electric-pulse" />
-              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <Zap className="h-6 w-6 md:h-7 md:w-7 text-primary electric-pulse" />
+              <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">GTA</span>
                 <span className="hidden sm:inline-flex items-center text-[10px] md:text-xs tracking-wider text-muted-foreground">RNSIT</span>
               </h1>
@@ -479,7 +479,7 @@ const Home = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder={`Search ${searchScope}...`}
-                  className="header-glow-field pl-10"
+                  className="header-glow-field pl-10 h-8 md:h-9 py-1"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleSearch}
@@ -489,7 +489,7 @@ const Home = () => {
                 value={searchScope}
                 onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
                 aria-label="Search in"
-                className="header-glow-field text-sm font-medium border rounded-md px-3 py-2.5 cursor-pointer focus:outline-none"
+                className="header-glow-field text-xs md:text-sm font-medium border rounded-md px-2.5 h-8 md:h-9 cursor-pointer focus:outline-none"
               >
                 <option value="skills">Skills</option>
                 <option value="activities">Activities</option>
@@ -511,16 +511,6 @@ const Home = () => {
               {user ? (
                 <>
                 <NotificationCenter userId={user?.id || null} />
-                <div className="hidden xl:flex items-center gap-1 mx-2">
-                  <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/skills')}>Skills</Button>
-                  <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/activities')}>Activities</Button>
-                  <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/people')}>People</Button>
-                  <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/communities')}>Communities</Button>
-                  <Button variant="ghost" size="sm" className="header-glow-btn" onClick={() => navigate('/teachers')}>Faculty</Button>
-                  {profile?.role === 'teacher' && (
-                    <Button variant="ghost" size="sm" className="header-glow-btn text-primary" onClick={() => navigate('/manage')}>Manage</Button>
-                  )}
-                </div>
 
                 <div className="hidden md:flex items-center space-x-1 md:space-x-3">
                   <Button
@@ -606,12 +596,12 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="md:hidden mt-3 flex items-center gap-2">
+          <div className="md:hidden mt-2 flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={`Search ${searchScope}...`}
-                className="header-glow-field pl-10"
+                className="header-glow-field pl-10 h-9 py-1"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleSearch}
@@ -621,7 +611,7 @@ const Home = () => {
               value={searchScope}
               onChange={(e) => setSearchScope(e.target.value as typeof searchScope)}
               aria-label="Search in"
-              className="header-glow-field text-sm font-medium border rounded-md px-3 py-2.5 cursor-pointer focus:outline-none"
+              className="header-glow-field text-xs font-medium border rounded-md px-2.5 h-9 cursor-pointer focus:outline-none"
             >
               <option value="skills">Skills</option>
               <option value="activities">Activities</option>

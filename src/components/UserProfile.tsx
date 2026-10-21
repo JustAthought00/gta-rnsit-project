@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Mail, MapPin, Calendar, Briefcase, GraduationCap, Settings, Github, Linkedin, Globe, Code, Users } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Mail, MapPin, Calendar, Briefcase, GraduationCap, Settings, Github, Linkedin, Globe, Code, Users, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ interface Profile {
   github_url?: string | null;
   linkedin_url?: string | null;
   portfolio_url?: string | null;
+  role?: string | null;
   created_at: string;
 }
 
@@ -314,6 +315,19 @@ const UserProfile = () => {
 
   const isOwnProfile = currentUser?.id === userId;
 
+  // Section navigation — these used to live in the topbar, which made it
+  // crowded, so they now live here on the profile.
+  const quickLinks = [
+    { label: 'Skills', path: '/skills', icon: Code },
+    { label: 'Activities', path: '/activities', icon: Calendar },
+    { label: 'People', path: '/people', icon: Users },
+    { label: 'Communities', path: '/communities', icon: Globe },
+    { label: 'Faculty', path: '/teachers', icon: GraduationCap },
+    ...(isOwnProfile && profile.role === 'teacher'
+      ? [{ label: 'Manage', path: '/manage', icon: Settings }]
+      : []),
+  ];
+
   // Pending/rejected events are moderation-invisible to the public: only the
   // owner sees their own unapproved submissions (badged), matching Home/AllActivities.
   const visibleActivities = activities.filter((activity) =>
@@ -327,7 +341,7 @@ const UserProfile = () => {
       <NebulaBackground />
 
       <header className="glass-header sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between flex-wrap gap-y-2">
             <Button variant="ghost" onClick={() => navigate('/')} className="text-foreground hover:bg-muted shrink-0">
               <ArrowLeft className="h-5 w-5 mr-2" />Home
@@ -408,6 +422,27 @@ const UserProfile = () => {
                   <Badge variant="outline" className="border-green-500/30 text-green-400">{projects.length} Projects</Badge>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick navigation - moved out of the topbar to keep the bar compact */}
+        <Card className="crystal-card mb-8">
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Compass className="h-5 w-5 text-primary" />Explore GTA
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {quickLinks.map(({ label, path, icon: Icon }) => (
+                <Button
+                  key={path}
+                  variant="outline"
+                  onClick={() => navigate(path)}
+                  className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+                >
+                  <Icon className="h-4 w-4 mr-2" />{label}
+                </Button>
+              ))}
             </div>
           </CardContent>
         </Card>

@@ -307,7 +307,7 @@ const EditProfile = () => {
       <NebulaBackground />
 
       <header className="glass-header sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between flex-wrap gap-y-2">
             <Button variant="ghost" onClick={() => navigate('/')} className="text-foreground hover:bg-muted shrink-0">
               <ArrowLeft className="h-5 w-5 mr-2" />

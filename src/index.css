@@ -421,7 +421,7 @@
      The base (light) rules paint the dark palette; the `.dark` rules below are
      kept untouched so dark mode still gets its translucent "floating glass" bar. */
   .glass-header {
-    @apply py-2 border-b;
+    @apply py-1.5 border-b;
     background: hsl(224 45% 8% / 0.66);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
@@ -529,6 +529,14 @@
      solid. !important is needed to beat the Input's own `bg-background` utility. */
   html:not(.dark) .glass-header .header-glow-field {
     background: hsl(224 30% 4% / 0.55) !important;
+    height: 2rem;
+  }
+  html:not(.dark) .glass-header .header-glow-field.h-9,
+  html:not(.dark) .glass-header .header-glow-field.md\:h-9 {
+    height: 2.25rem !important;
+  }
+  html:not(.dark) .glass-header .header-glow-field.h-8 {
+    height: 2rem !important;
   }
 
   .dark .header-glow-field {

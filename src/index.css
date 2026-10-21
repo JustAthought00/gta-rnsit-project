@@ -417,12 +417,14 @@
       0 20px 40px hsl(217 90% 61% / 0.3);
   }
 
-  /* Glass Header - dark bar in BOTH themes.
+  /* Glass Header - dark, highly translucent bar in BOTH themes.
      The base (light) rules paint the dark palette; the `.dark` rules below are
      kept untouched so dark mode still gets its translucent "floating glass" bar. */
   .glass-header {
-    @apply py-2 backdrop-blur-md border-b;
-    background: hsl(224 32% 8%);
+    @apply py-2 border-b;
+    background: hsl(224 45% 8% / 0.66);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
     border-bottom-color: hsl(217 90% 70% / 0.35);
     box-shadow:
       0 0 30px hsl(205 100% 65% / 0.28),
@@ -445,12 +447,12 @@
     --secondary: 190 70% 15%;
     --secondary-foreground: 190 60% 80%;
     --muted: 224 25% 12%;
-    --muted-foreground: 214 15% 55%;
+    --muted-foreground: 210 25% 85%;
     --accent: 190 90% 50%;
     --accent-foreground: 224 30% 6%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 214 20% 95%;
-    --border: 224 30% 18%;
+    --border: 224 25% 26%;
     --input: 224 30% 12%;
     --ring: 217 90% 61%;
   }
@@ -521,6 +523,12 @@
     box-shadow:
       0 0 18px hsl(205 100% 65% / 0.4),
       0 0 30px hsl(205 100% 70% / 0.22);
+  }
+
+  /* The search field rides on the translucent bar, so keep it glassy instead of
+     solid. !important is needed to beat the Input's own `bg-background` utility. */
+  html:not(.dark) .glass-header .header-glow-field {
+    background: hsl(224 30% 4% / 0.55) !important;
   }
 
   .dark .header-glow-field {

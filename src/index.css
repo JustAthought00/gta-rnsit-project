@@ -417,14 +417,42 @@
       0 20px 40px hsl(217 90% 61% / 0.3);
   }
 
-  /* Glass Header - Different styles for light/dark */
+  /* Glass Header - dark bar in BOTH themes.
+     The base (light) rules paint the dark palette; the `.dark` rules below are
+     kept untouched so dark mode still gets its translucent "floating glass" bar. */
   .glass-header {
-    @apply py-2 backdrop-blur-md border-b border-primary/30;
-    background: hsl(217 100% 90% / 0.45);
+    @apply py-2 backdrop-blur-md border-b;
+    background: hsl(224 32% 8%);
+    border-bottom-color: hsl(217 90% 70% / 0.35);
     box-shadow:
-      0 0 25px hsl(205 100% 60% / 0.35),
-      0 0 45px hsl(205 100% 65% / 0.2),
-      inset 0 -1px 0 hsl(205 100% 80% / 0.5);
+      0 0 30px hsl(205 100% 65% / 0.28),
+      0 0 60px hsl(205 100% 65% / 0.14);
+  }
+
+  /* The header carries its own dark palette in light mode, so every piece of
+     content inside it (titles, icons, badges, dropdowns) stays readable on the
+     dark bar. Values mirror the dark theme block above. */
+  html:not(.dark) .glass-header {
+    --background: 224 30% 4%;
+    --foreground: 214 20% 95%;
+    --card: 224 32% 8%;
+    --card-foreground: 214 20% 95%;
+    --popover: 224 32% 8%;
+    --popover-foreground: 214 20% 95%;
+    --primary: 217 90% 61%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 217 60% 20%;
+    --secondary: 190 70% 15%;
+    --secondary-foreground: 190 60% 80%;
+    --muted: 224 25% 12%;
+    --muted-foreground: 214 15% 55%;
+    --accent: 190 90% 50%;
+    --accent-foreground: 224 30% 6%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 214 20% 95%;
+    --border: 224 30% 18%;
+    --input: 224 30% 12%;
+    --ring: 217 90% 61%;
   }
 
   .dark .glass-header {
@@ -436,14 +464,14 @@
       0 0 60px hsl(205 100% 65% / 0.14);
   }
 
-  /* Glowing light-blue buttons for the glass header */
+  /* Glowing buttons for the glass header (dark chip on both themes) */
   .header-glow-btn {
-    border: 1px solid hsl(205 100% 70% / 0.6);
-    background: #ffffff;
-    color: hsl(217 90% 38%);
+    border: 1px solid hsl(205 100% 70% / 0.35);
+    background: hsl(217 80% 22% / 0.55);
+    color: hsl(210 100% 90%);
     box-shadow:
-      0 0 12px hsl(205 100% 60% / 0.4),
-      0 0 22px hsl(205 100% 65% / 0.2);
+      0 0 14px hsl(205 100% 65% / 0.25),
+      0 0 26px hsl(205 100% 70% / 0.15);
     transition: all 0.25s ease;
   }
 
@@ -455,6 +483,8 @@
       0 0 22px hsl(205 100% 65% / 0.2) !important;
   }
 
+  /* Dark mode keeps these exact values — kept as explicit overrides so the
+     dark theme can never drift when the base (light) rules are tuned. */
   .dark .header-glow-btn {
     border-color: hsl(205 100% 70% / 0.35);
     background: hsl(217 80% 22% / 0.55);
@@ -472,25 +502,25 @@
       0 0 26px hsl(205 100% 70% / 0.15);
   }
 
-  /* White glowing search field / select in the glass header */
+  /* Glowing search field / select in the glass header (dark chip on both themes) */
   .header-glow-field {
-    background: #ffffff;
-    border-color: hsl(205 100% 70% / 0.55);
-    color: hsl(217 60% 25%);
+    background: hsl(217 80% 20% / 0.6);
+    border-color: hsl(205 100% 70% / 0.35);
+    color: hsl(210 100% 90%);
     box-shadow:
-      0 0 12px hsl(205 100% 60% / 0.3),
-      0 0 22px hsl(205 100% 65% / 0.15);
+      0 0 12px hsl(205 100% 65% / 0.2),
+      0 0 22px hsl(205 100% 70% / 0.12);
   }
 
   .header-glow-field::placeholder {
-    color: hsl(217 30% 55%);
+    color: hsl(210 40% 70%);
   }
 
   .header-glow-field:focus {
-    border-color: hsl(205 100% 60% / 0.8);
+    border-color: hsl(205 100% 65% / 0.6);
     box-shadow:
-      0 0 18px hsl(205 100% 60% / 0.55),
-      0 0 32px hsl(205 100% 65% / 0.3);
+      0 0 18px hsl(205 100% 65% / 0.4),
+      0 0 30px hsl(205 100% 70% / 0.22);
   }
 
   .dark .header-glow-field {

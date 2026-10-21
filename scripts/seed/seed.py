@@ -1505,8 +1505,8 @@ def write_credentials(accounts, path):
         "   Messages, People, Faculty.",
         "3. **Live realtime demo:** open two browser windows, sign in as two different students,",
         "   and send a message in one — the other updates instantly.",
-        "4. **Skill request flow:** student B requests a skill from student A → A sees it in the bell",
-        "   notification and can accept/decline.",
+        "4. **Skill request flow:** student B opens student A's skill page and hits *Request* → A",
+        "   opens the same skill page, sees the incoming request, and accepts or declines it.",
         "5. **Campus Pulse** on the home page shows live counts and the Top Contributors board.",
         "",
     ]

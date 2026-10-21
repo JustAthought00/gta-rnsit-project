@@ -848,9 +848,9 @@ def seed_profiles(accounts, ids):
     for i, acc in enumerate(accounts):
         uid = ids[acc["email"]]
         avatar = f"https://i.pravatar.cc/400?u={acc['email']}"
-        banner = None
-        if acc["role"] == "student" and i % 3 == 0:
-            banner = f"https://picsum.photos/seed/gtabanner{i}/1200/320"
+        # Give every seeded profile a banner + photo so they show up across the app
+        banner = f"https://picsum.photos/seed/gtabanner{abs(hash(acc['email']))}/1600/420"
+
         bio = acc["bio"]
         if acc.get("usn"):
             bio = f"USN: {acc['usn']}. {bio}"

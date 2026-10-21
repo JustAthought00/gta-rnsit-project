@@ -398,7 +398,15 @@ const Home = () => {
     }
   }, [isDarkMode]);
 
-  const userName = profile?.full_name || user?.user_metadata?.full_name || 'User';
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
 
   // Enable message notifications when user is logged in
   useMessageNotifications({ 
@@ -533,15 +541,20 @@ const Home = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate(`/user/${user?.id}`)}
-                    className="header-glow-btn p-2"
+                    className="header-glow-btn flex items-center gap-1.5 px-1.5 md:px-2 py-1"
                     aria-label="Profile"
                   >
-                    <UserIcon className="h-4 w-4" />
+                    <Avatar className="h-6 w-6 md:h-7 md:w-7 border border-border/40">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-[10px] md:text-xs">
+                        {getInitials(userName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden lg:inline text-sm font-medium text-foreground max-w-[120px] truncate">
+                      {userName}
+                    </span>
                   </Button>
-                  <div className="hidden lg:block text-sm">
-                    <span className="text-muted-foreground">Welcome, </span>
-                    <span className="font-medium text-foreground">{userName.split(' ')[0]}</span>
-                  </div>
+
                   <Button 
                     variant="ghost" 
                     size="sm"

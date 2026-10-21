@@ -165,6 +165,12 @@ def main():
         api(f"/auth/v1/admin/users/{created['id']}", method="DELETE",
             headers={"apikey": os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ANON),
                      "Authorization": "Bearer " + os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ANON)})
+        # The auth user delete cascades to the profile row, but remove it
+        # explicitly too so a failed cascade can never leave the demo roster
+        # looking bigger than it is.
+        api(f"/rest/v1/profiles?user_id=eq.{created['id']}", method="DELETE",
+            headers={"apikey": os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ANON),
+                     "Authorization": "Bearer " + os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ANON)})
     else:
         check("a new signup automatically gets a profile row", False, json.dumps(created)[:150])
 

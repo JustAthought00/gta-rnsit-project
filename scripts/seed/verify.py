@@ -67,7 +67,10 @@ def main():
           "" if tt else json.dumps(raw)[:200])
 
     # 3. The signed-in student sees their own profile.
-    me = api("/rest/v1/profiles?select=user_id,full_name,role,department&eq(user_id,eq.%s)" % st[:0], st)
+    # NOTE: this PostgREST version silently IGNORES the legacy `eq(col,eq.value)`
+    # filter syntax and returns the whole table instead, so every filter here
+    # uses the current `col=eq.value` form.
+    me = api("/rest/v1/profiles?select=user_id,full_name,role,department&email=eq.%s" % student_email, st)
     profiles = api("/rest/v1/profiles?select=*", st)
     check("profiles are readable when signed in", isinstance(profiles, list) and len(profiles) >= 79,
           f"{len(profiles) if isinstance(profiles, list) else profiles} profiles")

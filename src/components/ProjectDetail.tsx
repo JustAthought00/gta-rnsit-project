@@ -127,14 +127,21 @@ const ProjectDetail = () => {
 
   const respondToInvite = async (status: 'accepted' | 'declined') => {
     if (!myInvite) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('project_collaborators')
       .update({ status, responded_at: new Date().toISOString() })
       .eq('id', myInvite.id)
-      .eq('user_id', currentUser.id);
+      .eq('user_id', currentUser.id)
+      .select('id');
 
     if (error) {
       toast.error('Failed to respond: ' + error.message);
+      return;
+    }
+    // RLS-filtered updates match 0 rows without raising an error in PostgREST,
+    // so success has to be proven by an affected row.
+    if (!data || data.length === 0) {
+      toast.error('Failed to respond — only the invitee can accept or decline.');
       return;
     }
     toast.success(status === 'accepted' ? 'You joined the project!' : 'Invite declined');
@@ -142,9 +149,17 @@ const ProjectDetail = () => {
   };
 
   const revokeInvite = async (inviteId: string) => {
-    const { error } = await supabase.from('project_collaborators').delete().eq('id', inviteId);
+    const { data, error } = await supabase
+      .from('project_collaborators')
+      .delete()
+      .eq('id', inviteId)
+      .select('id');
     if (error) {
       toast.error('Failed to remove collaborator: ' + error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('Failed to remove collaborator — only the project owner can remove people.');
       return;
     }
     toast.success('Collaborator removed');

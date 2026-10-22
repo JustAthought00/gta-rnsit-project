@@ -9,12 +9,12 @@ import type { Tables } from '@/integrations/supabase/types';
 
 interface Notification {
   id: string;
-  type: 'message' | 'review' | 'connection' | 'invite' | 'community_request';
+  type: 'message' | 'review' | 'connection' | 'invite' | 'community_request' | 'skill_request';
   title: string;
   description: string;
   time: string;
   read: boolean;
-  actionType?: 'connection' | 'invite' | 'community_request';
+  actionType?: 'connection' | 'invite' | 'community_request' | 'skill_request';
   relationId?: string;
   actorId?: string;
   path?: string;
@@ -168,6 +168,85 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
           });
         }
       )
+      // Skill requests: the table is in the realtime publication but nothing
+      // listened to it, so owners only discovered a request by revisiting the
+      // skill page and requesters were stuck on "Request pending" until a
+      // manual reload.
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'skill_requests',
+          filter: `owner_id=eq.${userId}`,
+        },
+        async (payload) => {
+          const request = payload.new as Tables<'skill_requests'>;
+          const [{ data: requester }, { data: skill }] = await Promise.all([
+            supabase.from('profiles').select('full_name').eq('user_id', request.requester_id).maybeSingle(),
+            supabase.from('skills').select('title').eq('id', request.skill_id).maybeSingle(),
+          ]);
+
+          addNotification({
+            id: request.id,
+            type: 'skill_request',
+            title: `${requester?.full_name || 'Someone'} requested your skill "${skill?.title || 'skill'}"`,
+            description: request.message?.substring(0, 60) || 'Tap to view the request',
+            time: new Date().toISOString(),
+            read: false,
+            actionType: 'skill_request',
+            relationId: request.id,
+            actorId: request.requester_id,
+            path: `/skill/${request.skill_id}`,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'skill_requests',
+          filter: `requester_id=eq.${userId}`,
+        },
+        async (payload) => {
+          const request = payload.new as Tables<'skill_requests'>;
+          if (request.status === 'pending') return;
+          const { data: skill } = await supabase
+            .from('skills')
+            .select('title')
+            .eq('id', request.skill_id)
+            .maybeSingle();
+
+          addNotification({
+            id: `req-status-${request.id}`,
+            type: 'skill_request',
+            title: request.status === 'accepted'
+              ? `Your request for "${skill?.title || 'a skill'}" was accepted`
+              : `Your request for "${skill?.title || 'a skill'}" was declined`,
+            description: request.status === 'accepted'
+              ? 'You can now message the skill owner to coordinate.'
+              : 'You can send a new request any time.',
+            time: new Date().toISOString(),
+            read: false,
+            path: `/skill/${request.skill_id}`,
+          });
+        }
+      )
+      // Bookmarks: the saved-skills page listens for this event so a
+      // bookmark toggled on a skill page shows up there without a reload.
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookmarks',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          window.dispatchEvent(new CustomEvent('bookmarksChanged'));
+        }
+      )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${userId}` },
@@ -224,10 +303,14 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
       { data: messages },
       { data: connectionRequests },
       { data: collaboratorInvites },
+      { data: ownedSkillRequests },
+      { data: mySkillRequests },
     ] = await Promise.all([
       supabase.from('messages').select('*').eq('receiver_id', userId).eq('read', false).order('created_at', { ascending: false }).limit(20),
       supabase.from('connections').select('*').eq('receiver_id', userId).eq('status', 'pending').limit(20),
       supabase.from('project_collaborators').select('*').eq('user_id', userId).eq('status', 'pending').limit(20),
+      supabase.from('skill_requests').select('*').eq('owner_id', userId).eq('status', 'pending').limit(20),
+      supabase.from('skill_requests').select('*').eq('requester_id', userId).neq('status', 'pending').order('updated_at', { ascending: false }).limit(10),
     ]);
 
     // Messages
@@ -301,6 +384,58 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
           path: `/project/${invite.project_id}`,
         });
       }
+    }
+
+    // Skill requests I own — actionable straight from the bell.
+    if (ownedSkillRequests && ownedSkillRequests.length > 0) {
+      const skillIds = [...new Set(ownedSkillRequests.map((r) => r.skill_id))];
+      const requesterIds = [...new Set(ownedSkillRequests.map((r) => r.requester_id))];
+      const [{ data: skillData }, { data: requesterData }] = await Promise.all([
+        supabase.from('skills').select('id, title').in('id', skillIds),
+        supabase.from('profiles').select('user_id, full_name').in('user_id', requesterIds),
+      ]);
+      const skillMap = new Map(skillData?.map((s) => [s.id, s.title]));
+      const requesterMap = new Map(requesterData?.map((p) => [p.user_id, p.full_name]));
+
+      ownedSkillRequests.forEach((request) => {
+        loaded.push({
+          id: request.id,
+          type: 'skill_request',
+          title: `${requesterMap.get(request.requester_id) || 'Someone'} requested your skill "${skillMap.get(request.skill_id) || 'skill'}"`,
+          description: request.message?.substring(0, 60) || 'Tap to view the request',
+          time: request.created_at,
+          read: false,
+          actionType: 'skill_request',
+          relationId: request.id,
+          actorId: request.requester_id,
+          path: `/skill/${request.skill_id}`,
+        });
+      });
+    }
+
+    // Skill requests I made that have been resolved. There is no `read`
+    // column on skill_requests, so these are shown as already-read: the bell
+    // badge must not be permanently blocked by historical rows.
+    if (mySkillRequests && mySkillRequests.length > 0) {
+      const skillIds = [...new Set(mySkillRequests.map((r) => r.skill_id))];
+      const { data: skillData } = await supabase.from('skills').select('id, title').in('id', skillIds);
+      const skillMap = new Map(skillData?.map((s) => [s.id, s.title]));
+
+      mySkillRequests.forEach((request) => {
+        loaded.push({
+          id: `req-status-${request.id}`,
+          type: 'skill_request',
+          title: request.status === 'accepted'
+            ? `Your request for "${skillMap.get(request.skill_id) || 'a skill'}" was accepted`
+            : `Your request for "${skillMap.get(request.skill_id) || 'a skill'}" was declined`,
+          description: request.status === 'accepted'
+            ? 'You can now message the skill owner to coordinate.'
+            : 'You can send a new request any time.',
+          time: request.updated_at || request.created_at,
+          read: true,
+          path: `/skill/${request.skill_id}`,
+        });
+      });
     }
 
     // Community join requests (communities this user leads)
@@ -412,10 +547,11 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
   const handleAction = async (notif: Notification, outcome: 'accepted' | 'declined') => {
     if (!notif.actionType || !notif.relationId) return;
 
-    // 'declined' is only a legal status for project_collaborators; connections
-    // and community_members document 'rejected', and downstream code only
-    // understood one of the two — writes used to wedge accounts permanently.
-    const dbStatus = notif.actionType === 'invite'
+    // 'declined' is only a legal status for project_collaborators and
+    // skill_requests; connections and community_members document 'rejected',
+    // and downstream code only understood one of the two — writes used to
+    // wedge accounts permanently.
+    const dbStatus = notif.actionType === 'invite' || notif.actionType === 'skill_request'
       ? outcome
       : (outcome === 'accepted' ? 'accepted' : 'rejected');
 
@@ -447,6 +583,15 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
       if (error) return toast.error('Action failed: ' + error.message);
       if (!data || data.length === 0) return toast.error('Action failed: only community leads can respond.');
       toast.success(outcome === 'accepted' ? 'Member approved' : 'Request declined');
+    } else if (notif.actionType === 'skill_request') {
+      const { data, error } = await supabase
+        .from('skill_requests')
+        .update({ status: dbStatus })
+        .eq('id', notif.relationId)
+        .select('id');
+      if (error) return toast.error('Action failed: ' + error.message);
+      if (!data || data.length === 0) return toast.error('Action failed: only the skill owner can respond.');
+      toast.success(outcome === 'accepted' ? 'Request accepted' : 'Request declined');
     }
 
     setNotifications(prev => prev.filter(n => n.id !== notif.id));
@@ -494,6 +639,7 @@ const NotificationCenter = ({ userId }: NotificationCenterProps) => {
       case 'connection': return <UserPlus className="h-4 w-4 text-primary" />;
       case 'invite': return <UsersIcon className="h-4 w-4 text-accent" />;
       case 'community_request': return <UserCheck className="h-4 w-4 text-primary" />;
+      case 'skill_request': return <Send className="h-4 w-4 text-accent" />;
       default: return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
   };

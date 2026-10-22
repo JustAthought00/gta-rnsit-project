@@ -1,10 +1,10 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Search, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Search, User as UserIcon, AlertTriangle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import NebulaBackground from './NebulaBackground';
 
@@ -23,9 +23,15 @@ const People = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
+  // A failed fetch must not masquerade as an empty directory: without this the
+  // page claimed "No profiles yet — be the first RNSITian to sign up" whenever
+  // the network or RLS rejected the query.
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPeople = async () => {
+  const fetchPeople = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
       // Only the fields a directory listing needs — never select email here,
       // it doesn't belong on a page anyone signed in can browse and scrape.
       const { data, error } = await supabase
@@ -33,11 +39,23 @@ const People = () => {
         .select('user_id, full_name, department, academic_year, bio, avatar_url')
         .order('full_name', { ascending: true });
 
-      if (!error && data) setPeople(data);
+      if (error) {
+        setLoadError(error.message);
+        setPeople([]);
+      } else {
+        setPeople(data || []);
+      }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Unknown error');
+      setPeople([]);
+    } finally {
       setLoading(false);
-    };
-    fetchPeople();
+    }
   }, []);
+
+  useEffect(() => {
+    fetchPeople();
+  }, [fetchPeople]);
 
   const filteredPeople = people.filter(person => {
     const term = searchTerm.toLowerCase();
@@ -105,6 +123,17 @@ const People = () => {
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Loading people...</p>
             </div>
+          ) : loadError ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Couldn't load the directory</h3>
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                {loadError}
+              </p>
+              <Button onClick={fetchPeople} className="plasma-button text-primary-foreground">
+                <RotateCcw className="h-4 w-4 mr-2" />Try again
+              </Button>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredPeople.map((person) => (
@@ -135,7 +164,7 @@ const People = () => {
             </div>
           )}
 
-          {!loading && filteredPeople.length === 0 && (
+          {!loading && !loadError && filteredPeople.length === 0 && (
             <div className="text-center py-12">
               <UserIcon className="h-10 w-10 text-primary/50 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2 text-foreground">

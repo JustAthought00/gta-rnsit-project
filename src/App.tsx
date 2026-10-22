@@ -20,6 +20,7 @@ import EditProfile from "./components/EditProfile";
 import Teachers from "./components/Teachers";
 import TeacherDashboard from "./components/TeacherDashboard";
 import Communities from "./components/Communities";
+import SavedSkills from "./components/SavedSkills";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -118,6 +119,7 @@ const App = () => {
                 <Route path="/teachers" element={<Teachers />} />
                 <Route path="/manage" element={<TeacherDashboard />} />
                 <Route path="/communities" element={<Communities />} />
+                <Route path="/saved" element={<SavedSkills />} />
                 <Route path="/skill/:skillId" element={<SkillDetail />} />
                 <Route path="/activity/:activityId" element={<ActivityDetail />} />
                 <Route path="/project/:projectId" element={<ProjectDetail />} />

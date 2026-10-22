@@ -76,12 +76,16 @@ const AddSkillModal = ({ isOpen, onClose, onSkillAdded, skillToEdit }: AddSkillM
         availability: formData.availability
       };
 
-      const { error } = isEditing
-        ? await supabase.from('skills').update(payload).eq('id', skillToEdit!.id).eq('user_id', user.id)
-        : await supabase.from('skills').insert({ user_id: user.id, ...payload });
+      const { data, error } = isEditing
+        ? await supabase.from('skills').update(payload).eq('id', skillToEdit!.id).eq('user_id', user.id).select('id')
+        : await supabase.from('skills').insert({ user_id: user.id, ...payload }).select('id');
 
       if (error) {
         toast.error(`Failed to ${isEditing ? 'update' : 'add'} skill: ` + error.message);
+      } else if (!data || data.length === 0) {
+        // RLS-filtered writes match 0 rows without raising an error in
+        // PostgREST, so success has to be proven by an affected row.
+        toast.error(`Failed to ${isEditing ? 'update' : 'add'} skill — you can only edit your own skills.`);
       } else {
         toast.success(`Skill ${isEditing ? 'updated' : 'added'} successfully!`);
         setFormData(emptyForm);

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { describeDbError, didWriteSucceed } from '@/lib/dbErrors';
 
 interface Message {
   id: string;
@@ -462,27 +463,70 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
     if (status === 'none') {
       // Send a connection request instead of a message; the chat opens only
       // once the other person accepts.
-      const { error } = await supabase.from('connections').insert({
-        sender_id: currentUser.id,
-        receiver_id: user.user_id,
-        status: 'pending'
-      });
+      const { data: inserted, error } = await supabase
+        .from('connections')
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: user.user_id,
+          status: 'pending'
+        })
+        .select('id');
+
       if (error) {
-        toast.error('Failed to send connection request: ' + error.message);
+        toast.error(describeDbError(error, 'Failed to send connection request.'));
         return;
       }
+      if (!didWriteSucceed(inserted)) {
+        toast.error('Failed to send connection request — a request may already exist.');
+        return;
+      }
+
+      // Send the greeting ALONGSIDE the request. A bare connection row left
+      // the receiver with a nameless request that never appeared in their
+      // Direct/Requests list (conversations are built from messages), so
+      // Accept/Decline was only reachable from the bell — and no conversation
+      // existed even after they accepted.
+      const { error: greetError } = await supabase.from('messages').insert({
+        sender_id: currentUser.id,
+        receiver_id: user.user_id,
+        content: `👋 Hi ${user.full_name.split(' ')[0]}! I'd like to connect with you.`
+      });
+      if (greetError) {
+        console.error('Greeting message failed:', greetError);
+      }
+
       toast.success(`Connection request sent to ${user.full_name}. You can chat once they accept.`);
     } else {
       // status === 'rejected' — they declined earlier; the pair keeps ONE row
       // (enforced by a unique index), so re-requesting resets it to pending.
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('connections')
         .update({ status: 'pending', sender_id: currentUser.id, receiver_id: user.user_id })
-        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.user_id}),and(sender_id.eq.${user.user_id},receiver_id.eq.${currentUser.id})`);
+        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.user_id}),and(sender_id.eq.${user.user_id},receiver_id.eq.${currentUser.id})`)
+        .select('id');
+
       if (error) {
-        toast.error('Failed to resend connection request: ' + error.message);
+        toast.error(describeDbError(error, 'Failed to resend connection request.'));
         return;
       }
+      // RLS-filtered updates match 0 rows without raising an error, so success
+      // has to be proven by an affected row.
+      if (!didWriteSucceed(updated)) {
+        toast.error('Failed to resend connection request — you may not be able to re-request.');
+        return;
+      }
+
+      // Same as a fresh request: carry a greeting so the receiver actually has
+      // a thread to reply to and the request shows up in their Requests tab.
+      const { error: greetError } = await supabase.from('messages').insert({
+        sender_id: currentUser.id,
+        receiver_id: user.user_id,
+        content: `👋 Hi ${user.full_name.split(' ')[0]}! I'd like to reconnect with you.`
+      });
+      if (greetError) {
+        console.error('Greeting message failed:', greetError);
+      }
+
       toast.success(`Connection request re-sent to ${user.full_name}.`);
     }
 
@@ -971,9 +1015,20 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                       variant="outline" 
                       className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
                       onClick={async () => {
-                        await supabase.from('connections').update({ status: 'rejected' })
+                        const { data, error } = await supabase.from('connections').update({ status: 'rejected' })
                           .eq('sender_id', currentConversation.other_user_id)
-                          .eq('receiver_id', currentUser.id);
+                          .eq('receiver_id', currentUser.id)
+                          .select('id');
+                        if (error) {
+                          toast.error('Failed to decline: ' + error.message);
+                          return;
+                        }
+                        // RLS-filtered updates match 0 rows without raising an
+                        // error, so success has to be proven by an affected row.
+                        if (!data || data.length === 0) {
+                          toast.error('Failed to decline — this request is no longer pending.');
+                          return;
+                        }
                         handleBack();
                         loadConversations();
                       }}
@@ -983,9 +1038,18 @@ const MessagesModal = ({ isOpen, onClose, currentUser }: MessagesModalProps) => 
                     <Button 
                       className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={async () => {
-                        await supabase.from('connections').update({ status: 'accepted' })
+                        const { data, error } = await supabase.from('connections').update({ status: 'accepted' })
                           .eq('sender_id', currentConversation.other_user_id)
-                          .eq('receiver_id', currentUser.id);
+                          .eq('receiver_id', currentUser.id)
+                          .select('id');
+                        if (error) {
+                          toast.error('Failed to accept: ' + error.message);
+                          return;
+                        }
+                        if (!data || data.length === 0) {
+                          toast.error('Failed to accept — this request is no longer pending.');
+                          return;
+                        }
                         loadConversations();
                       }}
                     >

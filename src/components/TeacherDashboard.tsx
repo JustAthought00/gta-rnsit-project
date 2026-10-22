@@ -155,12 +155,19 @@ const TeacherDashboard = () => {
         if (!proceed) return;
       }
     }
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('activities')
       .update({ approval_status: status })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
     if (error) {
       toast.error('Action failed: ' + error.message);
+      return;
+    }
+    // RLS-filtered updates match 0 rows without raising an error in PostgREST,
+    // so success has to be proven by an affected row.
+    if (!data || data.length === 0) {
+      toast.error('Action failed — only a teacher can approve or reject events.');
       return;
     }
     toast.success(status === 'approved' ? 'Event approved!' : 'Event rejected');
@@ -170,9 +177,13 @@ const TeacherDashboard = () => {
 
   const deleteActivity = async (id: string) => {
     if (!confirm('Delete this event? Teachers can do this for any event.')) return;
-    const { error } = await supabase.from('activities').delete().eq('id', id);
+    const { data, error } = await supabase.from('activities').delete().eq('id', id).select('id');
     if (error) {
       toast.error('Failed to delete: ' + error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('Failed to delete — only a teacher can delete events.');
       return;
     }
     toast.success('Event deleted');
@@ -181,12 +192,17 @@ const TeacherDashboard = () => {
   };
 
   const handleJoinRequest = async (requestId: string, status: 'accepted' | 'rejected') => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('community_members')
       .update({ status })
-      .eq('id', requestId);
+      .eq('id', requestId)
+      .select('id');
     if (error) {
       toast.error('Action failed: ' + error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('Action failed — only a community lead can approve or decline requests.');
       return;
     }
     toast.success(status === 'accepted' ? 'Member approved' : 'Request declined');
@@ -194,12 +210,17 @@ const TeacherDashboard = () => {
   };
 
   const assignRole = async (communityId: string, memberUserId: string, role: 'president_id' | 'vice_president_id') => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('communities')
       .update({ [role]: memberUserId })
-      .eq('id', communityId);
+      .eq('id', communityId)
+      .select('id');
     if (error) {
       toast.error('Failed to assign role: ' + error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('Failed to assign role — only a community lead can assign roles.');
       return;
     }
     toast.success(role === 'president_id' ? 'President assigned!' : 'Vice President assigned!');

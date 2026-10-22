@@ -186,13 +186,18 @@ const SkillDetail = () => {
   const saveReview = async (reviewId: string) => {
     if (!currentUser || !skillId) return;
     setSubmittingReview(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('reviews')
       .update({ rating: editingRating, comment: editingComment.trim() || null })
       .eq('id', reviewId)
-      .eq('user_id', currentUser.id);
+      .eq('user_id', currentUser.id)
+      .select('id');
     if (error) {
       toast.error('Failed to update review: ' + error.message);
+    } else if (!data || data.length === 0) {
+      // RLS-filtered updates match 0 rows without raising an error in
+      // PostgREST, so success has to be proven by an affected row.
+      toast.error('Failed to update review — you can only edit your own review.');
     } else {
       toast.success('Review updated!');
       setEditingReviewId(null);
@@ -203,13 +208,18 @@ const SkillDetail = () => {
 
   const deleteReview = async (reviewId: string) => {
     if (!currentUser) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('reviews')
       .delete()
       .eq('id', reviewId)
-      .eq('user_id', currentUser.id);
+      .eq('user_id', currentUser.id)
+      .select('id');
     if (error) {
       toast.error('Failed to delete review: ' + error.message);
+    } else if (!data || data.length === 0) {
+      // RLS-filtered deletes match 0 rows without raising an error in
+      // PostgREST, so success has to be proven by an affected row.
+      toast.error('Failed to delete review — you can only delete your own review.');
     } else {
       toast.success('Review deleted');
       loadReviews(skillId);

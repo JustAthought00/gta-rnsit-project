@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { describeDbError, didWriteSucceed } from '@/lib/dbErrors';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,23 +123,52 @@ const Communities = () => {
         .from('community_members')
         .select('community_id, status')
         .eq('user_id', session.user.id);
-      const myStatusMap = new Map((memberships || []).map((m) => [m.community_id, m.status]));
+      // A pair normally holds a single membership row, but legacy data can
+      // still carry a stale 'rejected' row next to a live one. Prefer the most
+      // advanced status so a member is never shown as merely 'rejected'.
+      const rank: Record<string, number> = { rejected: 1, pending: 2, accepted: 3 };
+      const myStatusMap = new Map<string, string>();
+      (memberships || []).forEach((m) => {
+        const current = myStatusMap.get(m.community_id);
+        if (!current || (rank[m.status] || 0) > (rank[current] || 0)) {
+          myStatusMap.set(m.community_id, m.status);
+        }
+      });
 
       enriched.forEach(community => {
         community.myStatus = (myStatusMap.get(community.id) || 'none') as 'none' | 'accepted' | 'pending' | 'rejected';
       });
     }
 
-    // For expanded/led communities fetch members + pending requests
-    const allMembers = await supabase
-      .from('community_members')
-      .select('*')
-      .in('community_id', enriched.map(c => c.id));
+    // Member counts come from a SECURITY DEFINER aggregate that exposes counts
+    // only. Since the C7 RLS tightening, community_members rows are private to
+    // the requester, accepted members and the community's leadership — so
+    // deriving "N members" from the rows below showed "0 members" on every
+    // card to anyone outside that community.
+    const { data: countRows } = await supabase.rpc('community_member_counts');
+    const memberCountMap = new Map(
+      ((countRows as { community_id: string; member_count: number }[]) || []).map((r) => [
+        r.community_id,
+        Number(r.member_count),
+      ])
+    );
 
-    const memberProfiles = await supabase
-      .from('profiles')
-      .select('user_id, full_name')
-      .in('user_id', [...new Set((allMembers.data || []).map((m) => m.user_id))]);
+    // RLS exposes membership rows to exactly the people allowed to see the
+    // roster (accepted members and the leads), so this select stays scoped.
+    const allMembers = enriched.length
+      ? await supabase
+          .from('community_members')
+          .select('*')
+          .in('community_id', enriched.map(c => c.id))
+      : { data: [] as { community_id: string; id: string; user_id: string; status: string; joined_at: string }[] };
+
+    const memberIds = [...new Set((allMembers.data || []).map((m) => m.user_id))];
+    const memberProfiles = memberIds.length
+      ? await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', memberIds)
+      : { data: [] as { user_id: string; full_name: string }[] };
     const memberProfileMap = new Map(memberProfiles.data?.map((p) => [p.user_id, p.full_name]));
 
     const membersByCommunity = new Map<string, { community_id: string; id: string; user_id: string; status: string; joined_at: string; full_name: string }[]>();
@@ -150,7 +180,7 @@ const Communities = () => {
 
     enriched.forEach(community => {
       const members = membersByCommunity.get(community.id) || [];
-      community.member_count = members.filter((m) => m.status === 'accepted').length;
+      community.member_count = memberCountMap.get(community.id) ?? 0;
       community.members = members;
       community.pendingRequests = members.filter((m) => m.status === 'pending');
     });
@@ -165,11 +195,24 @@ const Communities = () => {
       navigate('/auth');
       return;
     }
-    const { error } = await supabase
+    // Re-requesting after a rejection used to fail with a duplicate-key error:
+    // community_members carried a hard UNIQUE(community_id, user_id) and the
+    // stale 'rejected' row was never removed. The migration replaces that with
+    // partial unique indexes plus a BEFORE INSERT trigger that clears the
+    // stale rejection, so the pair can hold a fresh 'pending' request again.
+    const { data: inserted, error } = await supabase
       .from('community_members')
-      .insert({ community_id: community.id, user_id: currentUser.id, status: 'pending' });
+      .insert({ community_id: community.id, user_id: currentUser.id, status: 'pending' })
+      .select('id');
+
     if (error) {
-      toast.error('Failed to request join: ' + error.message);
+      toast.error(describeDbError(error, 'Could not send the join request.'));
+      return;
+    }
+    // An RLS-blocked insert comes back as an empty array rather than an error,
+    // so success has to be proven by an affected row.
+    if (!didWriteSucceed(inserted)) {
+      toast.error('Could not send the join request — you may already have one pending in this community.');
       return;
     }
     toast.success('Join request sent! A lead will approve you.');
@@ -195,12 +238,20 @@ const Communities = () => {
   };
 
   const handleJoinRequest = async (requestId: string, status: 'accepted' | 'rejected') => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('community_members')
       .update({ status })
-      .eq('id', requestId);
+      .eq('id', requestId)
+      .select('id');
+
     if (error) {
       toast.error('Action failed: ' + error.message);
+      return;
+    }
+    // RLS-filtered updates match 0 rows without raising an error in PostgREST,
+    // so success must be proven by an affected row — otherwise the toast lied.
+    if (!data || data.length === 0) {
+      toast.error('Action failed: only a community lead can approve or decline requests.');
       return;
     }
     toast.success(status === 'accepted' ? 'Member approved' : 'Request declined');
@@ -209,12 +260,18 @@ const Communities = () => {
 
   const setLeaderRole = async (community: CommunityWithMeta, memberUserId: string, role: 'president_id' | 'vice_president_id') => {
     if (!community.id) return;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('communities')
       .update({ [role]: memberUserId })
-      .eq('id', community.id);
+      .eq('id', community.id)
+      .select('id');
+
     if (error) {
       toast.error('Failed to assign role: ' + error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('Failed to assign role: only a community lead can assign roles.');
       return;
     }
     toast.success(role === 'president_id' ? 'President assigned!' : 'Vice President assigned!');

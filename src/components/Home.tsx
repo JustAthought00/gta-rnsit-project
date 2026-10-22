@@ -1,4 +1,4 @@
-import { Search, Users, Calendar, Zap, Code, Camera, Music, Palette, PenTool, Video, Mic, Briefcase, Globe, TrendingUp, Moon, Sun, MessageCircle, Plus, User as UserIcon, ChevronLeft, ChevronRight, Menu, X, LogOut } from 'lucide-react';
+import { Search, Users, Calendar, Zap, Code, Camera, Music, Palette, PenTool, Video, Mic, Briefcase, Globe, TrendingUp, Moon, Sun, MessageCircle, Plus, User as UserIcon, ChevronLeft, ChevronRight, Menu, X, LogOut, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -407,6 +407,12 @@ const Home = () => {
       .slice(0, 2);
   };
 
+  // The compact topbar renders the signed-in user's name and avatar. The
+  // definition of userName was dropped when getInitials was introduced, which
+  // left three dangling references to an undefined identifier — a hard
+  // ReferenceError for every signed-in user.
+  const userName = profile?.full_name || user?.user_metadata?.full_name || 'User';
+
 
   // Enable message notifications when user is logged in
   useMessageNotifications({ 
@@ -521,6 +527,16 @@ const Home = () => {
                 <NotificationCenter userId={user?.id || null} />
 
                 <div className="hidden md:flex items-center space-x-1 md:space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/saved')}
+                    className="header-glow-btn relative p-2"
+                    aria-label="Saved skills"
+                    title="Saved skills"
+                  >
+                    <Bookmark className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -641,6 +657,7 @@ const Home = () => {
                 { label: 'People', path: '/people' },
                 { label: 'Communities', path: '/communities' },
                 { label: 'Faculty', path: '/teachers' },
+                ...(user ? [{ label: 'Saved Skills', path: '/saved' }] : []),
               ].map((item) => (
                 <Button
                   key={item.path}

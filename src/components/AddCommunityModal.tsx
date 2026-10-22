@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, GraduationCap, UserCheck, UserX, BookOpen } from 'lucide-react';
+import { X, Users, GraduationCap, UserCheck, UserX, BookOpen, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,12 +19,62 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
   const [description, setDescription] = useState('');
   const [leadAsTeacher, setLeadAsTeacher] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [facultyLead, setFacultyLead] = useState<{ user_id: string; full_name: string } | null>(null);
+  const [noFacultyAvailable, setNoFacultyAvailable] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setName('');
     setDescription('');
     setLeadAsTeacher(isTeacher);
+    setFacultyLead(null);
+    setNoFacultyAvailable(false);
+  }, [isOpen, isTeacher]);
+
+  // A student-created community used to be born leadless: the modal claimed
+  // "New communities must have a teacher lead" while still letting the student
+  // submit with leader_id = null, so nobody could approve the join requests.
+  // Pick a faculty member up front instead, preferring the creator's own
+  // department.
+  useEffect(() => {
+    if (!isOpen || isTeacher) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      if (!userId || cancelled) return;
+
+      const { data: teacherRows } = await supabase
+        .from('teachers')
+        .select('user_id, full_name, department')
+        .limit(50);
+
+      if (cancelled) return;
+      const teachers = teacherRows || [];
+      if (teachers.length === 0) {
+        setNoFacultyAvailable(true);
+        return;
+      }
+
+      const { data: creatorProfile } = await supabase
+        .from('profiles')
+        .select('department')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const dept = creatorProfile?.department;
+      const match = dept
+        ? teachers.find((t) => t.department === dept)
+        : undefined;
+
+      const chosen = match || teachers[0];
+      if (!cancelled) setFacultyLead({ user_id: chosen.user_id, full_name: chosen.full_name });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, isTeacher]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,11 +92,17 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
       return;
     }
 
+    // Teachers lead their own community; students get a faculty lead assigned
+    // so the community always has somebody who can approve join requests.
+    const leaderId = isTeacher
+      ? (leadAsTeacher ? session.user.id : null)
+      : (facultyLead?.user_id || null);
+
     const insertPayload = {
       name: name.trim(),
       description: description.trim() || null,
       created_by: session.user.id,
-      leader_id: isTeacher && leadAsTeacher ? session.user.id : null,
+      leader_id: leaderId,
     };
 
     const { data: community, error } = await supabase
@@ -70,6 +126,10 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
       toast.warning('Community created but could not auto-join');
     } else {
       toast.success('Community created!');
+    }
+
+    if (!leaderId) {
+      toast.warning('No faculty lead is available yet — ask a faculty member to lead this community.');
     }
 
     setLoading(false);
@@ -121,10 +181,27 @@ const AddCommunityModal = ({ isOpen, onClose, onCommunityAdded, isTeacher }: Add
 
           {!isTeacher && (
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
-              <BookOpen className="h-4 w-4 text-accent mt-0.5" />
-              <p className="text-xs text-muted-foreground">
-                New communities must have a teacher lead. Ask a faculty member to create the community, or talk to an existing lead.
-              </p>
+              {facultyLead ? <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" /> : <BookOpen className="h-4 w-4 text-accent mt-0.5 shrink-0" />}
+              <div>
+                {facultyLead ? (
+                  <>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{facultyLead.full_name}</span> will be the faculty lead
+                      and will approve join requests for this community.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      You'll be able to nominate a president and vice president once the lead is in place.
+                    </p>
+                  </>
+                ) : noFacultyAvailable ? (
+                  <p className="text-xs text-muted-foreground">
+                    No faculty member is available to lead this community right now. It'll be created without a
+                    lead — ask a faculty member to take it on so join requests can be approved.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Finding a faculty lead...</p>
+                )}
+              </div>
             </div>
           )}
 
